@@ -72,6 +72,7 @@ AgentWidget.init({
 Windows:
 
 - run [`server/dist/windows/WebAgentBridgeSetup.exe`](./server/dist/windows/WebAgentBridgeSetup.exe)
+- current Windows binaries in this repo are unsigned, so Windows SmartScreen / Smart App Control may warn or block them
 
 macOS / Linux:
 
@@ -121,6 +122,12 @@ Current packaged artifacts in this repo:
 - Windows installer and app in [`server/dist/windows/`](./server/dist/windows)
 - Python wheel and source tarball in [`server/dist/`](./server/dist)
 - widget npm tarball in [`widget/`](./widget)
+
+Important:
+
+- current Windows binaries are unsigned
+- that can trigger Windows SmartScreen or Smart App Control warnings
+- signed Windows release builds are still pending
 
 Checksums:
 

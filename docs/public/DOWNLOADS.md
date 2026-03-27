@@ -11,6 +11,12 @@ These are the packaged artifacts currently committed in this repository for dire
 - `server/dist/windows/webagent_protocol_built_exe.reg`
   - manual Windows protocol-registration fallback
 
+Important:
+
+- the current Windows binaries are unsigned
+- Windows SmartScreen or Smart App Control may warn or block them
+- for public end-user distribution, signed release binaries are still the preferred path
+
 ## Python package
 
 - `server/dist/local_agent_bridge-0.1.0-py3-none-any.whl`

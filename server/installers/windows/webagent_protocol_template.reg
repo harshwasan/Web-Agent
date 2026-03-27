@@ -1,0 +1,19 @@
+Windows Registry Editor Version 5.00
+
+; Replace the executable path below with your built WebAgentBridge.exe path.
+; Example:
+; "C:\\Users\\you\\Downloads\\WebAgentBridge\\WebAgentBridge.exe" "%1"
+
+[HKEY_CURRENT_USER\Software\Classes\webagent]
+@="URL:WebAgent Protocol"
+"URL Protocol"=""
+
+[HKEY_CURRENT_USER\Software\Classes\webagent\DefaultIcon]
+@="C:\\Path\\To\\WebAgentBridge.exe"
+
+[HKEY_CURRENT_USER\Software\Classes\webagent\shell]
+
+[HKEY_CURRENT_USER\Software\Classes\webagent\shell\open]
+
+[HKEY_CURRENT_USER\Software\Classes\webagent\shell\open\command]
+@="\"C:\\Path\\To\\WebAgentBridge.exe\" \"%1\""

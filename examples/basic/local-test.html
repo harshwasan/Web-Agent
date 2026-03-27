@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WebAgent Local Test Host</title>
+  <link rel="agent-doc" href="./agent-docs/website-overview.md" title="Website Overview">
+  <link rel="agent-doc" href="./agent-docs/capabilities.json" title="Host Capabilities JSON">
+  <link rel="agent-doc" href="./agent-docs/api-client.js" title="Demo Inventory API Class">
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --panel: #fffaf2;
+      --ink: #102231;
+      --muted: #5f6a71;
+      --line: #d8cbb6;
+      --accent: #135b6d;
+      --accent-soft: #d8edf1;
+      --warning: #a53f2b;
+      --good: #1b6f4b;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      background:
+        radial-gradient(circle at top left, rgba(19, 91, 109, 0.10), transparent 32%),
+        linear-gradient(180deg, #f7f1e8 0%, var(--bg) 100%);
+    }
+    a { color: var(--accent); }
+    .shell {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 28px 24px 80px;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.4fr 0.9fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 16px 40px rgba(21, 39, 53, 0.08);
+    }
+    .hero-main {
+      padding: 26px 28px;
+      min-height: 220px;
+    }
+    .hero-main h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      line-height: 1.1;
+    }
+    .hero-main p {
+      margin: 0 0 18px;
+      max-width: 60ch;
+      color: var(--muted);
+      font-size: 17px;
+    }
+    .hero-actions,
+    .toolbar,
+    .tab-bar,
+    .doc-list,
+    .stat-grid,
+    .inventory-actions,
+    .support-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+    button {
+      border: 1px solid var(--ink);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 10px 16px;
+      cursor: pointer;
+    }
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    button.ghost {
+      background: transparent;
+    }
+    .hero-side {
+      padding: 24px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.75);
+    }
+    .stat-label {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 26px;
+      font-weight: 700;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+    .badge.good {
+      color: var(--good);
+      border-color: rgba(27, 111, 75, 0.35);
+      background: rgba(27, 111, 75, 0.08);
+    }
+    .badge.warn {
+      color: var(--warning);
+      border-color: rgba(165, 63, 43, 0.35);
+      background: rgba(165, 63, 43, 0.08);
+    }
+    .toolbar {
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    .toolbar input,
+    .toolbar select {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      min-width: 200px;
+      background: #fff;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(360px, 0.7fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .main-column,
+    .side-column {
+      display: grid;
+      gap: 18px;
+    }
+    .section {
+      padding: 20px;
+    }
+    .section h2,
+    .section h3 {
+      margin-top: 0;
+    }
+    .tab-bar {
+      margin-bottom: 14px;
+    }
+    .tab-btn.active {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .inventory-actions {
+      margin-bottom: 14px;
+      align-items: center;
+    }
+    .feed {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 10px;
+    }
+    .feed li {
+      border-left: 3px solid var(--accent);
+      padding: 10px 12px;
+      background: rgba(19, 91, 109, 0.07);
+      border-radius: 0 12px 12px 0;
+      font-size: 14px;
+    }
+    .doc-list a {
+      text-decoration: none;
+    }
+    .callout {
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.55);
+      color: var(--muted);
+    }
+    .support-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .mini-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.7);
+    }
+    #agent-workspace {
+      min-height: 220px;
+      background: rgba(19, 91, 109, 0.05);
+    }
+    #maintenance-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(16, 34, 49, 0.42);
+      z-index: 30;
+    }
+    #maintenance-modal.open { display: flex; }
+    .modal-card {
+      width: min(560px, 100%);
+      padding: 22px;
+      background: #fffaf7;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      box-shadow: 0 24px 60px rgba(15, 29, 41, 0.25);
+    }
+    .modal-card h3 {
+      margin-top: 0;
+    }
+    .muted {
+      color: var(--muted);
+    }
+    @media (max-width: 1100px) {
+      .hero,
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="panel hero-main">
+        <div class="badge good" id="bridge-demo-badge">Host docs auto-attach to agent context</div>
+        <h1>Dealer Ops Demo Host</h1>
+        <p>
+          This page exists to test the embeddable widget against a realistic host. It has visible controls,
+          tabbed content, a workspace target, and three host-provided reference files that the widget can inline
+          into agent context: a website overview, a capabilities JSON file, and a JavaScript API class.
+        </p>
+        <div class="hero-actions">
+          <button id="fill-lc200-btn" class="primary" type="button">Fill Search With LC200</button>
+          <button id="refresh-inventory-btn" type="button">Refresh Inventory</button>
+          <button id="open-maintenance-btn" type="button">Open Maintenance Modal</button>
+          <button id="toggle-premium-btn" class="ghost" type="button">Toggle Premium Filter</button>
+        </div>
+      </div>
+      <aside class="panel hero-side">
+        <div class="stat-grid">
+          <div class="stat">
+            <div class="stat-label">Visible Stock</div>
+            <div class="stat-value" id="visible-stock-count">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Open Tickets</div>
+            <div class="stat-value" id="open-ticket-count">4</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Current Tab</div>
+            <div class="stat-value" id="current-tab-label">Inventory</div>
+          </div>
+        </div>
+        <div class="badge" id="inventory-status-pill">Inventory API healthy</div>
+        <div class="badge warn" id="approval-reminder-pill">Use the widget to inspect host docs and update the workspace</div>
+        <div class="callout">
+          Try asking the agent: "Read the host files and tell me what selectors and demo APIs this site exposes."
+        </div>
+      </aside>
+    </section>
+
+    <div class="layout">
+      <main class="main-column">
+        <section class="panel section">
+          <div class="toolbar">
+            <input id="inventory-search" type="text" value="land cruiser" placeholder="Search inventory, ticket notes, or API docs">
+            <select id="location-filter">
+              <option value="all">All cities</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Bangalore">Bangalore</option>
+            </select>
+            <button id="apply-filters-btn" type="button">Apply Filters</button>
+          </div>
+
+          <div class="tab-bar">
+            <button class="tab-btn active" data-tab="inventory" type="button">Inventory</button>
+            <button class="tab-btn" data-tab="support" type="button">Support Tools</button>
+            <button class="tab-btn" data-tab="api" type="button">Host Files</button>
+          </div>
+
+          <div class="tab-panel active" data-panel="inventory">
+            <div class="inventory-actions">
+              <div class="badge" id="premium-filter-pill">Premium filter off</div>
+              <div class="badge" id="last-refresh-pill">Last refresh: not yet</div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>Year</th>
+                  <th>City</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-body"></tbody>
+            </table>
+          </div>
+
+          <div class="tab-panel" data-panel="support">
+            <div class="support-grid">
+              <div class="mini-card">
+                <h3>Safe Selectors</h3>
+                <p class="muted">These selectors are intentionally stable for agent tests.</p>
+                <code>#inventory-search</code><br>
+                <code>#refresh-inventory-btn</code><br>
+                <code>#open-maintenance-btn</code><br>
+                <code>#fill-lc200-btn</code><br>
+                <code>#toggle-premium-btn</code>
+              </div>
+              <div class="mini-card">
+                <h3>Supported Behaviors</h3>
+                <p class="muted">The page responds to click and input actions and exposes a workspace target.</p>
+                <ul>
+                  <li>Search text filters the table.</li>
+                  <li>Modal can be opened and closed.</li>
+                  <li>Workspace can be replaced with agent-rendered HTML.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" data-panel="api">
+            <h3>Host Reference Files</h3>
+            <p class="muted">
+              These same-origin files are linked with <code>rel="agent-doc"</code> and are automatically attached into
+              the widget context as small inline files.
+            </p>
+            <div class="doc-list">
+              <a data-agent-doc href="./agent-docs/website-overview.md">website-overview.md</a>
+              <a data-agent-doc href="./agent-docs/capabilities.json">capabilities.json</a>
+              <a data-agent-doc href="./agent-docs/api-client.js">api-client.js</a>
+            </div>
+          </div>
+        </section>
+
+        <section id="agent-workspace" data-agent-workspace="main" class="panel section">
+          <h2>Agent Workspace</h2>
+          <p class="muted">
+            Agent-rendered HTML appears here. The host files above should also be visible to the agent as inline context.
+          </p>
+        </section>
+      </main>
+
+      <aside class="side-column">
+        <div id="agent-root"></div>
+
+        <section class="panel section">
+          <h2>Activity Feed</h2>
+          <ul id="activity-feed" class="feed"></ul>
+        </section>
+
+        <section class="panel section">
+          <h2>Suggested Tests</h2>
+          <ul>
+            <li>Ask the agent to summarize the host files and list the selectors it can use.</li>
+            <li>Ask it to fill the search box with LC200, refresh inventory, and show a summary in the workspace.</li>
+            <li>Ask it to read the API class file and explain what methods the demo site exposes.</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <div id="maintenance-modal" aria-hidden="true">
+    <div class="modal-card">
+      <h3>Maintenance Window</h3>
+      <p class="muted">
+        This dialog exists so the agent can demonstrate host-specific UI interactions. Closing it should write an entry
+        into the activity feed.
+      </p>
+      <div class="hero-actions">
+        <button id="confirm-maintenance-btn" class="primary" type="button">Confirm Window</button>
+        <button id="close-maintenance-btn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../widget/dist/agent-widget.js"></script>
+  <script>
+    (function () {
+      var inventoryRows = [
+        { model: "Toyota Land Cruiser LC200 ZX", year: 2021, city: "Delhi", price: "Rs 2.14 Cr", status: "Featured" },
+        { model: "Toyota Land Cruiser VX", year: 2018, city: "Mumbai", price: "Rs 1.52 Cr", status: "Live" },
+        { model: "Lexus LX570", year: 2019, city: "Bangalore", price: "Rs 1.88 Cr", status: "Watchlist" },
+        { model: "Toyota Fortuner Legender", year: 2023, city: "Delhi", price: "Rs 56.9 L", status: "Live" },
+        { model: "Toyota Land Cruiser LC200 Sahara", year: 2016, city: "Mumbai", price: "Rs 1.09 Cr", status: "Archive" }
+      ];
+      var premiumOnly = false;
+      var currentTab = "inventory";
+
+      var inventoryBody = document.getElementById("inventory-body");
+      var searchInput = document.getElementById("inventory-search");
+      var locationFilter = document.getElementById("location-filter");
+      var visibleStockCount = document.getElementById("visible-stock-count");
+      var currentTabLabel = document.getElementById("current-tab-label");
+      var premiumPill = document.getElementById("premium-filter-pill");
+      var lastRefreshPill = document.getElementById("last-refresh-pill");
+      var inventoryStatusPill = document.getElementById("inventory-status-pill");
+      var activityFeed = document.getElementById("activity-feed");
+      var modal = document.getElementById("maintenance-modal");
+
+      function logActivity(text) {
+        var item = document.createElement("li");
+        item.textContent = new Date().toLocaleTimeString() + " - " + text;
+        activityFeed.insertBefore(item, activityFeed.firstChild);
+        while (activityFeed.children.length > 8) {
+          activityFeed.removeChild(activityFeed.lastChild);
+        }
+      }
+
+      function filteredRows() {
+        var term = String(searchInput.value || "").toLowerCase();
+        var city = String(locationFilter.value || "all");
+        return inventoryRows.filter(function (row) {
+          var matchesTerm = !term || JSON.stringify(row).toLowerCase().indexOf(term) >= 0;
+          var matchesCity = city === "all" || row.city === city;
+          var matchesPremium = !premiumOnly || row.price.indexOf("Cr") >= 0;
+          return matchesTerm && matchesCity && matchesPremium;
+        });
+      }
+
+      function renderInventory() {
+        var rows = filteredRows();
+        inventoryBody.innerHTML = rows.map(function (row) {
+          return [
+            "<tr>",
+            "<td><strong>", row.model, "</strong></td>",
+            "<td>", String(row.year), "</td>",
+            "<td>", row.city, "</td>",
+            "<td>", row.price, "</td>",
+            "<td>", row.status, "</td>",
+            "</tr>"
+          ].join("");
+        }).join("") || "<tr><td colspan=\"5\">No rows match the current filters.</td></tr>";
+        visibleStockCount.textContent = String(rows.length);
+      }
+
+      function setTab(tabName) {
+        currentTab = tabName;
+        currentTabLabel.textContent = tabName.charAt(0).toUpperCase() + tabName.slice(1);
+        Array.prototype.forEach.call(document.querySelectorAll(".tab-btn"), function (btn) {
+          btn.classList.toggle("active", btn.getAttribute("data-tab") === tabName);
+        });
+        Array.prototype.forEach.call(document.querySelectorAll(".tab-panel"), function (panel) {
+          panel.classList.toggle("active", panel.getAttribute("data-panel") === tabName);
+        });
+        logActivity("Switched to " + tabName + " tab");
+      }
+
+      function openModal() {
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+        logActivity("Opened maintenance modal");
+      }
+
+      function closeModal(reason) {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+        logActivity(reason || "Closed maintenance modal");
+      }
+
+      document.getElementById("fill-lc200-btn").addEventListener("click", function () {
+        searchInput.value = "LC200";
+        searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+        renderInventory();
+        logActivity("Filled the search box with LC200");
+      });
+
+      document.getElementById("refresh-inventory-btn").addEventListener("click", function () {
+        lastRefreshPill.textContent = "Last refresh: " + new Date().toLocaleTimeString();
+        inventoryStatusPill.textContent = "Inventory API refreshed";
+        renderInventory();
+        logActivity("Refreshed inventory data");
+      });
+
+      document.getElementById("open-maintenance-btn").addEventListener("click", openModal);
+      document.getElementById("close-maintenance-btn").addEventListener("click", function () { closeModal("Closed maintenance modal"); });
+      document.getElementById("confirm-maintenance-btn").addEventListener("click", function () { closeModal("Confirmed maintenance window"); });
+      document.getElementById("toggle-premium-btn").addEventListener("click", function () {
+        premiumOnly = !premiumOnly;
+        premiumPill.textContent = premiumOnly ? "Premium filter on" : "Premium filter off";
+        renderInventory();
+        logActivity("Premium filter " + (premiumOnly ? "enabled" : "disabled"));
+      });
+      document.getElementById("apply-filters-btn").addEventListener("click", function () {
+        renderInventory();
+        logActivity("Applied filters to inventory");
+      });
+      searchInput.addEventListener("input", renderInventory);
+      locationFilter.addEventListener("change", renderInventory);
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) closeModal("Dismissed maintenance modal");
+      });
+      Array.prototype.forEach.call(document.querySelectorAll(".tab-btn"), function (btn) {
+        btn.addEventListener("click", function () {
+          setTab(btn.getAttribute("data-tab"));
+        });
+      });
+
+      renderInventory();
+      logActivity("Demo host loaded");
+
+      window.ExampleAgentBridge = {
+        getContext: function () {
+          return {
+            title: document.title,
+            path: window.location.pathname,
+            url: window.location.href,
+            current_tab: currentTab,
+            premium_filter: premiumOnly ? "on" : "off",
+            workspace_target: "#agent-workspace"
+          };
+        },
+        getVisibleTextSample: function () {
+          return document.body.innerText.slice(0, 6000);
+        },
+        clickSelector: function (selector) {
+          var el = document.querySelector(selector);
+          if (!el) throw new Error("selector not found");
+          el.click();
+          return { ok: true, selector: selector };
+        },
+        setInputValue: function (selector, value) {
+          var el = document.querySelector(selector);
+          if (!el) throw new Error("selector not found");
+          el.value = value == null ? "" : String(value);
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+          return { ok: true, selector: selector, value: el.value };
+        }
+      };
+
+      AgentWidget.init({
+        target: "#agent-root",
+        bridge: window.ExampleAgentBridge,
+        workspaceTarget: "#agent-workspace",
+        defaultBackend: "codex",
+        localBridgeDiscoveryUrls: ["http://127.0.0.1:8791"],
+        hostContext: {
+          host_name: "Dealer Ops Demo Host",
+          host_reference_mode: "Same-origin agent-doc files are auto-attached inline for the agent.",
+          preferred_workspace_target: "#agent-workspace",
+          notable_selectors: "#inventory-search, #refresh-inventory-btn, #open-maintenance-btn, #fill-lc200-btn, #toggle-premium-btn",
+          api_class_file: "/examples/basic/agent-docs/api-client.js"
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "local-agent-bridge"
+version = "0.1.0"
+description = "Local companion bridge for the WebAgent widget"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+  "Flask>=3.0.0",
+  "requests>=2.31.0",
+  "python-dotenv>=1.0.0",
+  "Pillow>=10.4.0",
+  "pystray>=0.19.5"
+]
+
+[project.optional-dependencies]
+sqlserver = ["pyodbc>=5.1.0"]
+build = ["pyinstaller>=6.11.0"]
+
+[project.scripts]
+local-agent-bridge = "webagent_server.server:main"
+local-agent-bridge-app = "webagent_server.desktop_app:main"
+local-agent-bridge-install = "webagent_server.installer:main"
+local-agent-bridge-protocol = "webagent_server.protocol_handler:main"
+webagent-server = "webagent_server.server:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+webagent_server = ["docs/*.md"]

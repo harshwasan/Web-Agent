@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Node / npm
+node_modules/
+*.tgz
+npm-debug.log*
+
+# Build outputs
+build/
+dist/
+*.egg-info/
+server/dist/
+widget/*.tgz
+server/build/.installer-win/
+server/build/.pyinstaller-win/
+server/build/__pycache__/
+server/build/*.pyc
+
+# Local-only archived material
+deprecated/
+
+# Local env and runtime data
+.env
+*.log
+*.err.log
+server/.webagent-server/
+server/src/local_agent_bridge.egg-info/
+tmp_examples_*.log
+tmp_examples_*.err.log
+tmp_local_bridge_*.log
+tmp_local_bridge_*.err.log
+demo_server*.log
+demo_server*.err.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,32 @@
+{
+  "host_name": "Dealer Ops Demo Host",
+  "workspace_target": "#agent-workspace",
+  "selectors": {
+    "search_input": "#inventory-search",
+    "location_filter": "#location-filter",
+    "apply_filters_button": "#apply-filters-btn",
+    "fill_lc200_button": "#fill-lc200-btn",
+    "refresh_button": "#refresh-inventory-btn",
+    "open_maintenance_button": "#open-maintenance-btn",
+    "toggle_premium_button": "#toggle-premium-btn"
+  },
+  "supported_actions": [
+    "clickSelector",
+    "setInputValue",
+    "renderAgentHtml",
+    "appendAgentHtml",
+    "fetchDomHtml"
+  ],
+  "api_files": [
+    {
+      "name": "DemoInventoryApi",
+      "path": "/examples/basic/agent-docs/api-client.js",
+      "kind": "javascript-class-reference"
+    }
+  ],
+  "safe_test_prompts": [
+    "Summarize the host files and selectors.",
+    "Fill the search box with LC200 and refresh inventory.",
+    "Read the API class and explain what methods exist."
+  ]
+}

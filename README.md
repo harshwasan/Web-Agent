@@ -1,71 +1,27 @@
 # WebAgent
 
-Embeddable website agent UI plus a user-run local bridge for Codex and Claude.
+Embeddable website agent UI with a user-run local bridge for Codex and Claude.
 
-WebAgent is built around two separate surfaces:
+WebAgent has two parts:
 
-- `widget/`: a browser-side widget that website owners embed on their pages
-- `server/`: a local companion app and bridge that end users run on their own machine
+- [`widget/`](./widget): the browser widget a website embeds
+- [`server/`](./server): the local bridge and desktop companion the end user runs
 
-That split lets websites expose safe page-specific actions while users keep model execution under their own control.
+That lets websites expose safe page-specific actions while users keep the agent runtime on their own machine.
 
-## Why This Exists
-
-Browsers cannot directly:
-
-- start local CLI tools
-- access a user's shell
-- launch local agent runtimes safely
-
-WebAgent bridges that gap with a local bridge on `localhost` plus a website widget that can either:
-
-- auto-discover the user's local bridge, or
-- use a site-provided backend if the website owner wants to force one
-
-## Architecture
+## How It Works
 
 1. A website embeds the widget.
-2. The website exposes page context and safe UI actions through a small JS bridge.
+2. The website provides a small JS bridge with page context and safe UI actions.
 3. The widget connects to either:
    - the user's local bridge, or
    - a site-provided backend via `apiBaseUrl`
-4. The backend runs Codex or Claude and returns messages plus structured website actions.
-5. The widget shows progress, asks for approval when required, and executes allowed actions in the page.
-
-## Two Audiences
-
-### Website owners
-
-You use the widget package in [`widget/`](./widget).
-
-You provide:
-
-- a mount target
-- a small JS bridge with page context and safe actions
-- optionally your own backend URL
-
-### End users
-
-You install the local bridge package in [`server/`](./server).
-
-That package provides:
-
-- a local HTTP bridge for the widget
-- a lightweight desktop companion app
-- protocol handling for `webagent://`
-- local approval controls for trusted websites
-
-Current platform state:
-
-- Windows: packaged setup flow available
-- macOS: source-based install/run path documented
-- Linux: packaged setup bundle flow added
+4. Codex or Claude runs through the backend.
+5. The widget shows progress, asks for approval when needed, and executes allowed page actions.
 
 ## Quick Start
 
-If you want direct packaged downloads from this repository, see [`docs/public/DOWNLOADS.md`](./docs/public/DOWNLOADS.md).
-
-### Website owners
+### For website owners
 
 ```html
 <div id="agent-root"></div>
@@ -92,7 +48,7 @@ If you want direct packaged downloads from this repository, see [`docs/public/DO
 </script>
 ```
 
-If you do not set `apiBaseUrl`, the widget will try to auto-discover the user's local bridge.
+If you do not provide `apiBaseUrl`, the widget tries to auto-discover the user's local bridge.
 
 If you want to force your own backend:
 
@@ -105,26 +61,13 @@ AgentWidget.init({
 });
 ```
 
-### End users
+### For end users
 
 Windows:
 
-- download and run [`server/dist/windows/WebAgentBridgeSetup.exe`](./server/dist/windows/WebAgentBridgeSetup.exe)
+- run [`server/dist/windows/WebAgentBridgeSetup.exe`](./server/dist/windows/WebAgentBridgeSetup.exe)
 
-Python package files:
-
-- [`server/dist/local_agent_bridge-0.1.0-py3-none-any.whl`](./server/dist/local_agent_bridge-0.1.0-py3-none-any.whl)
-- [`server/dist/local_agent_bridge-0.1.0.tar.gz`](./server/dist/local_agent_bridge-0.1.0.tar.gz)
-
-Widget package tarball:
-
-- [`widget/webagent-widget-0.1.0.tgz`](./widget/webagent-widget-0.1.0.tgz)
-
-Linux:
-
-- extract and run the packaged Linux setup bundle built from `server/dist/linux/WebAgentBridgeSetup.tar.gz`
-
-macOS:
+macOS / Linux:
 
 ```bash
 cd server
@@ -132,7 +75,7 @@ python3 -m pip install .
 local-agent-bridge
 ```
 
-Optional desktop companion on macOS / Linux:
+Optional desktop companion:
 
 ```bash
 local-agent-bridge-app
@@ -142,41 +85,54 @@ Default local address:
 
 - `http://127.0.0.1:8787`
 
-Local approval manager:
+Approval manager:
 
 - `http://127.0.0.1:8787/bridge/sites`
 
-## Security Model
+Direct packaged downloads are listed in [`docs/public/DOWNLOADS.md`](./docs/public/DOWNLOADS.md).
 
-The core security boundary is:
+## Security
 
-- discovery is allowed
-- agent API access is blocked until the website origin is approved locally
+The local bridge does not grant agent access to a website by default.
 
-When a site first tries to use the local bridge:
+When a site first tries to connect:
 
 1. the bridge returns `approval_required`
-2. the widget opens a local approval flow
+2. the widget opens the local approval flow
 3. the user allows or denies the site
 4. the decision is stored locally on that machine
 
-This prevents random websites from silently gaining access to a user's local agent runtime.
+That prevents random websites from silently gaining access to the user's local agent runtime.
 
-More details are in [`docs/public/SECURITY.md`](./docs/public/SECURITY.md).
+More detail:
 
-## Runtime Logs
+- [`docs/public/SECURITY.md`](./docs/public/SECURITY.md)
 
-Runtime logs are stored in:
+## Downloads
 
-- Windows: `%USERPROFILE%\\.local-agent-bridge\\runtime_logs`
-- macOS / Linux: `~/.local-agent-bridge/runtime_logs`
+Current packaged artifacts in this repo:
 
-Important files:
+- Windows installer and app in [`server/dist/windows/`](./server/dist/windows)
+- Python wheel and source tarball in [`server/dist/`](./server/dist)
+- widget npm tarball in [`widget/`](./widget)
 
-- `desktop_app.log`
-- `bridge_server.log`
+Checksums:
 
-## Repository Layout
+- [`server/dist/SHA256SUMS.txt`](./server/dist/SHA256SUMS.txt)
+- [`widget/SHA256SUMS.txt`](./widget/SHA256SUMS.txt)
+
+## Documentation
+
+- [`docs/public/QUICKSTART.md`](./docs/public/QUICKSTART.md)
+- [`docs/public/USAGE.md`](./docs/public/USAGE.md)
+- [`docs/public/DOWNLOADS.md`](./docs/public/DOWNLOADS.md)
+- [`docs/public/BRIDGE_CONTRACT.md`](./docs/public/BRIDGE_CONTRACT.md)
+- [`docs/public/ARCHITECTURE.md`](./docs/public/ARCHITECTURE.md)
+- [`docs/public/DEPLOYMENT.md`](./docs/public/DEPLOYMENT.md)
+- [`docs/public/SECURITY.md`](./docs/public/SECURITY.md)
+- [`docs/public/RELEASES.md`](./docs/public/RELEASES.md)
+
+## Repo Layout
 
 ```text
 WebAgent/
@@ -184,88 +140,37 @@ WebAgent/
   examples/
   server/
   widget/
-  README.md
-  CONTRIBUTING.md
-  SECURITY.md
-  LICENSE
 ```
 
 Key folders:
 
-- [`widget/`](./widget): embeddable widget package for websites
-- [`server/`](./server): local bridge package and desktop companion
-- [`examples/`](./examples): demo and host integration examples
-- [`docs/public/`](./docs/public): public-facing setup, security, and deployment docs
-
-`deprecated/` exists locally for archived reference material but is intentionally excluded from the public GitHub repo.
-
-## Documentation
-
-- [`docs/public/QUICKSTART.md`](./docs/public/QUICKSTART.md)
-- [`docs/public/USAGE.md`](./docs/public/USAGE.md)
-- [`docs/public/DEPLOYMENT.md`](./docs/public/DEPLOYMENT.md)
-- [`docs/public/DOWNLOADS.md`](./docs/public/DOWNLOADS.md)
-- [`docs/public/BRIDGE_CONTRACT.md`](./docs/public/BRIDGE_CONTRACT.md)
-- [`docs/public/ARCHITECTURE.md`](./docs/public/ARCHITECTURE.md)
-- [`docs/public/SECURITY.md`](./docs/public/SECURITY.md)
-- [`docs/public/RELEASES.md`](./docs/public/RELEASES.md)
+- [`widget/`](./widget): embeddable widget package
+- [`server/`](./server): local bridge and desktop companion
+- [`examples/`](./examples): demo host and reference examples
+- [`docs/public/`](./docs/public): public-facing docs
 
 ## Project Status
 
-What is already in place:
+Already in place:
 
 - reusable embeddable widget
 - Codex and Claude support
 - widget-side progress and action flow
 - local bridge auto-discovery
-- local approval flow for website origins
-- desktop companion app and Windows setup flow
+- local website approval flow
+- Windows setup flow and desktop companion
 
-What still needs more hardening:
+Still needs more hardening:
 
 - more automated test coverage
 - stronger hosted-backend auth controls
 - broader browser and host-site integration testing
-- packaging polish across macOS and Linux
-
-## Publishing
-
-Suggested public distribution model:
-
-- source code on GitHub
-- widget package published from `widget/`
-- Python package published from `server/`
-- desktop binaries published through GitHub Releases
-
-Current repo also includes ready-to-download packaged artifacts for immediate use:
-
-- Windows installer and app under [`server/dist/windows/`](./server/dist/windows)
-- Python wheel and source tarball under [`server/dist/`](./server/dist)
-- widget npm tarball under [`widget/`](./widget)
-
-Widget publish:
-
-```bash
-cd widget
-npm publish --access public
-```
-
-Server publish:
-
-```bash
-cd server
-python -m build
-twine upload dist/*
-```
+- more polished macOS and Linux packaging
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
-
-## Security
-
-See [`SECURITY.md`](./SECURITY.md).
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md)
 
 ## License
 
-This project is licensed under the MIT License. See [`LICENSE`](./LICENSE).
+- [`LICENSE`](./LICENSE)

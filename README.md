@@ -1,6 +1,12 @@
 # WebAgent
 
-Embeddable website agent UI with a user-run local bridge for Codex and Claude.
+Embeddable agent UI for websites, backed by a user-run local bridge for Codex and Claude.
+
+Use it when you want:
+
+- a website widget that can show agent progress and ask for approvals
+- host-specific page actions exposed through simple JavaScript
+- end users to keep the actual agent runtime on their own machine
 
 WebAgent has two parts:
 

@@ -53,6 +53,14 @@ Use this if you want to embed the assistant into a website.
 
 Use this if you want websites to talk to your local Codex or Claude agent.
 
+Direct downloads in this repo:
+
+- Windows installer: `server/dist/windows/WebAgentBridgeSetup.exe`
+- Python wheel: `server/dist/local_agent_bridge-0.1.0-py3-none-any.whl`
+- Python source package: `server/dist/local_agent_bridge-0.1.0.tar.gz`
+- widget npm tarball: `widget/webagent-widget-0.1.0.tgz`
+- checksums: `server/dist/SHA256SUMS.txt`, `widget/SHA256SUMS.txt`
+
 ### Windows
 
 Run:

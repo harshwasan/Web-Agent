@@ -63,6 +63,8 @@ Current platform state:
 
 ## Quick Start
 
+If you want direct packaged downloads from this repository, see [`docs/public/DOWNLOADS.md`](./docs/public/DOWNLOADS.md).
+
 ### Website owners
 
 ```html
@@ -107,7 +109,16 @@ AgentWidget.init({
 
 Windows:
 
-- run [`server/dist/windows/WebAgentBridgeSetup.exe`](./server/dist/windows/WebAgentBridgeSetup.exe)
+- download and run [`server/dist/windows/WebAgentBridgeSetup.exe`](./server/dist/windows/WebAgentBridgeSetup.exe)
+
+Python package files:
+
+- [`server/dist/local_agent_bridge-0.1.0-py3-none-any.whl`](./server/dist/local_agent_bridge-0.1.0-py3-none-any.whl)
+- [`server/dist/local_agent_bridge-0.1.0.tar.gz`](./server/dist/local_agent_bridge-0.1.0.tar.gz)
+
+Widget package tarball:
+
+- [`widget/webagent-widget-0.1.0.tgz`](./widget/webagent-widget-0.1.0.tgz)
 
 Linux:
 
@@ -193,6 +204,7 @@ Key folders:
 - [`docs/public/QUICKSTART.md`](./docs/public/QUICKSTART.md)
 - [`docs/public/USAGE.md`](./docs/public/USAGE.md)
 - [`docs/public/DEPLOYMENT.md`](./docs/public/DEPLOYMENT.md)
+- [`docs/public/DOWNLOADS.md`](./docs/public/DOWNLOADS.md)
 - [`docs/public/BRIDGE_CONTRACT.md`](./docs/public/BRIDGE_CONTRACT.md)
 - [`docs/public/ARCHITECTURE.md`](./docs/public/ARCHITECTURE.md)
 - [`docs/public/SECURITY.md`](./docs/public/SECURITY.md)
@@ -224,6 +236,12 @@ Suggested public distribution model:
 - widget package published from `widget/`
 - Python package published from `server/`
 - desktop binaries published through GitHub Releases
+
+Current repo also includes ready-to-download packaged artifacts for immediate use:
+
+- Windows installer and app under [`server/dist/windows/`](./server/dist/windows)
+- Python wheel and source tarball under [`server/dist/`](./server/dist)
+- widget npm tarball under [`widget/`](./widget)
 
 Widget publish:
 

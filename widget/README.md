@@ -10,6 +10,16 @@ This package contains only the frontend script. It does not run Codex or Claude 
 npm install @webagent/widget
 ```
 
+Direct tarball committed in this repo:
+
+```bash
+npm install ./webagent-widget-0.1.0.tgz
+```
+
+Checksum file:
+
+- [`SHA256SUMS.txt`](./SHA256SUMS.txt)
+
 Or load the built script from a CDN:
 
 ```html

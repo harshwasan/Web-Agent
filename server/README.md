@@ -25,6 +25,12 @@ It also exposes:
 pip install local-agent-bridge
 ```
 
+Direct package files committed in this repo:
+
+- [`dist/local_agent_bridge-0.1.0-py3-none-any.whl`](./dist/local_agent_bridge-0.1.0-py3-none-any.whl)
+- [`dist/local_agent_bridge-0.1.0.tar.gz`](./dist/local_agent_bridge-0.1.0.tar.gz)
+- checksums: [`dist/SHA256SUMS.txt`](./dist/SHA256SUMS.txt)
+
 Optional SQL Server support:
 
 ```bash
@@ -37,7 +43,7 @@ pip install "local-agent-bridge[sqlserver]"
 
 Current easiest path:
 
-- run [`server/dist/windows/WebAgentBridgeSetup.exe`](../server/dist/windows/WebAgentBridgeSetup.exe)
+- run [`dist/windows/WebAgentBridgeSetup.exe`](./dist/windows/WebAgentBridgeSetup.exe)
 
 That setup currently gives you:
 
@@ -46,6 +52,11 @@ That setup currently gives you:
 - protocol registration for `webagent://`
 
 After install, launch the app from the installed shortcut or by running the installed desktop companion.
+
+Other Windows files in the repo:
+
+- [`dist/windows/WebAgentBridge.exe`](./dist/windows/WebAgentBridge.exe)
+- [`dist/windows/webagent_protocol_built_exe.reg`](./dist/windows/webagent_protocol_built_exe.reg)
 
 ### macOS
 
@@ -253,6 +264,7 @@ PyInstaller build scripts are included:
 Build details are documented in:
 
 - `build/BUILD_BINARIES.md`
+- tracked in this repo at [`build/BUILD_BINARIES.md`](./build/BUILD_BINARIES.md)
 
 ## Approval and Management
 

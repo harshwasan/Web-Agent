@@ -338,6 +338,35 @@ def _describe_native_progress_event(event: Any) -> Optional[str]:
     return None
 
 
+def _map_sse_event_name(event: Any) -> str:
+    """Map a Codex exec --json event to a specific SSE event name."""
+    if not isinstance(event, dict):
+        return "progress"
+    event_type = str(event.get("type") or "").strip()
+    item = event.get("item") if isinstance(event.get("item"), dict) else {}
+    item_type = str(item.get("type") or "").strip()
+    if event_type in ("thread.started", "turn.started", "turn.completed", "turn.failed"):
+        return event_type.replace(".", "_")
+    if event_type in ("item.started", "item.completed", "item.updated"):
+        mapping = {
+            "agent_message": "agent_message",
+            "reasoning": "agent_thinking",
+            "command_execution": "command_running",
+            "file_change": "file_change",
+            "mcp_tool_call": "tool_call",
+            "collab_tool_call": "tool_call",
+            "web_search": "web_search",
+            "todo_list": "agent_plan",
+        }
+        base = mapping.get(item_type, "progress")
+        if event_type == "item.completed":
+            return base + "_done"
+        if event_type == "item.updated":
+            return base + "_update"
+        return base
+    return "progress"
+
+
 def _strip_html_text(raw_html: Any) -> str:
     text = str(raw_html or "")
     text = re.sub(r"(?is)<script\b.*?</script>", " ", text)
@@ -682,14 +711,12 @@ def _codex_extra_cli_args() -> List[str]:
     return args
 
 
-def _build_prompt(messages: List[Dict[str, Any]], app_context: Optional[Dict[str, Any]]) -> str:
+def _shared_agent_instructions() -> List[str]:
+    """Shared system instructions used by both Codex and Claude CLI paths."""
     website_actions = ", ".join(_website_action_types())
     parts = [
-        "You are an embedded website agent backend.",
-        "Inspect the provided app context and conversation history.",
         "Website action types available to you: " + website_actions + ".",
         "Use website action objects only for host-specific UI operations, Agent Workspace rendering, and bridge-backed helpers.",
-        "If native agent tools are available, prefer them for general web research, reading, reasoning, and other non-website-specific work.",
         "Host-provided docs may include inline same-origin file contents from the page; treat those embedded files as authoritative website reference material.",
         "Do not use local shell commands or local filesystem searches to discover website content, selectors, products, or page state unless the user explicitly asks about local repo files.",
         "Assume a normal end user does not have a local checkout of the website. For host evidence, rely on app context, host-provided inline docs, website actions, and same-origin web content instead of local workspace files.",
@@ -702,11 +729,23 @@ def _build_prompt(messages: List[Dict[str, Any]], app_context: Optional[Dict[str
         "When getVisibleProducts returns a visible catalog count and structured item list, treat it as complete storefront evidence for the current page state unless the page changes.",
         "Keep web research tight: usually no more than 6 targeted searches per turn, and avoid repeating near-duplicate searches for the same product once you have an official source plus one strong review/comparison source.",
         "Do not emit webSearch or fetchWebPage actions unless bridge web tools are explicitly available and native agent tools are unavailable or clearly insufficient.",
-        "Return strict JSON that matches the provided schema.",
-        "For every action object, include args, selector, value, symbol, sql, path, url, query, limit, and offset. Use null when not applicable.",
         "For installed bridge extension tools, put tool inputs inside args and leave unrelated flat fields null.",
         "Use renderAgentHtml for live workspace updates when the host exposes an Agent Workspace.",
     ]
+    return parts
+
+
+def _build_prompt(messages: List[Dict[str, Any]], app_context: Optional[Dict[str, Any]]) -> str:
+    parts = [
+        "You are an embedded website agent backend.",
+        "Inspect the provided app context and conversation history.",
+    ]
+    parts.extend(_shared_agent_instructions())
+    parts.extend([
+        "If native agent tools are available, prefer them for general web research, reading, reasoning, and other non-website-specific work.",
+        "Return strict JSON that matches the provided schema.",
+        "For every action object, include args, selector, value, symbol, sql, path, url, query, limit, and offset. Use null when not applicable.",
+    ])
     tool_prompt_lines = _bridge_tool_prompt_lines()
     if tool_prompt_lines:
         parts.append("\n".join(tool_prompt_lines))
@@ -884,31 +923,18 @@ def _verify_final_response(candidate: Dict[str, Any], messages: List[Dict[str, A
 
 
 def _claude_cli_request(messages: List[Dict[str, Any]], app_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-    website_actions = ", ".join(_website_action_types())
     docs = _context_docs()
     hosted_docs = _hosted_docs_section(app_context)
     prompt_parts = [
         "You are Claude Code embedded inside a website assistant backend.",
-        "Website action types available to you: " + website_actions + ".",
-        "Use website action objects only for host-specific UI operations, Agent Workspace rendering, and bridge-backed helpers.",
+    ]
+    prompt_parts.extend(_shared_agent_instructions())
+    prompt_parts.extend([
         "If native Claude tools are available in this session, prefer them for general research and reasoning before falling back to website actions.",
-        "Host-provided docs may include inline same-origin file contents from the page; treat those embedded files as authoritative website reference material.",
-        "Do not use local shell commands or local filesystem searches to discover website content, selectors, products, or page state unless the user explicitly asks about local repo files.",
-        "Assume a normal end user does not have a local checkout of the website. For host evidence, rely on app context, host-provided inline docs, website actions, and same-origin web content instead of local workspace files.",
-        "For website tasks, command execution for local file or shell inspection is forbidden unless the user explicitly asks about local project files.",
-        "Prefer structured website reads like getVisibleProducts and getPageState before using raw fetchDomHtml on dynamic pages.",
-        "Use getDomTree as a compact live semantic snapshot when you need to inspect page structure or a specific container without pulling full HTML.",
-        "For getDomTree actions: selector is the root selector (or null for body), offset is max depth, limit is max nodes, and value is the per-node text limit.",
-        "Do not run native shell commands like rg, grep, pwsh, bash, dir, or Get-ChildItem just to inspect the current website when website actions or inline host docs can answer it.",
-        "If you are about to inspect local files to answer a website question, stop and use website actions or host-provided docs instead.",
-        "When getVisibleProducts returns a visible catalog count and structured item list, treat it as complete storefront evidence for the current page state unless the page changes.",
-        "Keep web research tight: usually no more than 6 targeted searches per turn, and avoid repeating near-duplicate searches for the same product once you have an official source plus one strong review/comparison source.",
-        "Do not emit webSearch or fetchWebPage actions unless bridge web tools are explicitly available and native tools are unavailable or clearly insufficient.",
         "Return strict JSON only with keys: message, actions.",
         "Each action must include keys: type, reason, args, selector, value, symbol, sql, path, url, query, limit, offset.",
-        "For installed bridge extension tools, put tool inputs inside args and leave unrelated flat fields null.",
         "Use null for any action fields that do not apply.",
-    ]
+    ])
     tool_prompt_lines = _bridge_tool_prompt_lines()
     if tool_prompt_lines:
         prompt_parts.append("\n".join(tool_prompt_lines))
@@ -1484,7 +1510,8 @@ def create_app() -> Flask:
                         native_activity.append(desc)
                         if len(native_activity) > 60:
                             native_activity = native_activity[-60:]
-                    yield "event: progress\ndata: %s\n\n" % json.dumps(event, ensure_ascii=True)
+                    sse_name = _map_sse_event_name(event)
+                    yield "event: %s\ndata: %s\n\n" % (sse_name, json.dumps(event, ensure_ascii=True))
                 if error_msg:
                     yield "event: error\ndata: %s\n\n" % json.dumps({"ok": False, "error": error_msg, "duration_ms": int((time.time() - started) * 1000)}, ensure_ascii=True)
                     return

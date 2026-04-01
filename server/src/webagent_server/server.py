@@ -27,6 +27,14 @@ except Exception:  # pragma: no cover
 import requests
 from flask import Flask, Response, jsonify, request
 
+from .persistent_session import (
+    get_or_create_session,
+    close_session,
+    close_all_sessions,
+    cleanup_idle_sessions,
+    persistent_sessions_enabled,
+)
+
 try:
     from dotenv import load_dotenv
 
@@ -600,32 +608,69 @@ def _website_action_types() -> List[str]:
     return actions
 
 
+def _action_schema_for_type(action_type: str) -> Dict[str, Any]:
+    """Return a minimal JSON-Schema for a specific action type."""
+    base: Dict[str, Any] = {
+        "type": {"type": "string", "const": action_type},
+        "reason": {"type": "string"},
+    }
+    required = ["type", "reason"]
+    # Per-action required fields (only what each action actually needs)
+    field_map: Dict[str, List[str]] = {
+        "clickSelector": ["selector"],
+        "setInputValue": ["selector", "value"],
+        "navigateStock": ["symbol"],
+        "queryDb": ["sql"],
+        "fetchDbTables": [],
+        "fetchDbStatus": [],
+        "exportQueryToCsv": ["sql", "path"],
+        "getPageState": [],
+        "getVisibleProducts": [],
+        "getDomTree": ["selector", "value", "limit", "offset"],
+        "fetchDomHtml": ["selector"],
+        "renderAgentHtml": ["value"],
+        "appendAgentHtml": ["value"],
+        "webSearch": ["query"],
+        "fetchWebPage": ["url"],
+    }
+    field_defs: Dict[str, Dict[str, Any]] = {
+        "args": {"type": ["object", "null"], "additionalProperties": True},
+        "selector": {"type": ["string", "null"]},
+        "value": {"type": ["string", "null"]},
+        "symbol": {"type": ["string", "null"]},
+        "sql": {"type": ["string", "null"]},
+        "path": {"type": ["string", "null"]},
+        "url": {"type": ["string", "null"]},
+        "query": {"type": ["string", "null"]},
+        "limit": {"type": ["integer", "null"]},
+        "offset": {"type": ["integer", "null"]},
+    }
+    needed = field_map.get(action_type, list(field_defs.keys()))
+    # Always include args for bridge extension tools
+    if "args" not in needed:
+        needed = ["args"] + needed
+    props = dict(base)
+    for field in needed:
+        if field in field_defs:
+            props[field] = field_defs[field]
+    return {
+        "type": "object",
+        "properties": props,
+        "required": required + needed,
+        "additionalProperties": False,
+    }
+
+
 def _response_schema() -> Dict[str, Any]:
+    action_types = _website_action_types()
+    action_schemas = [_action_schema_for_type(t) for t in action_types]
     return {
         "type": "object",
         "properties": {
             "message": {"type": "string"},
             "actions": {
                 "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "type": {"type": "string"},
-                        "reason": {"type": "string"},
-                        "args": {"type": ["object", "null"], "additionalProperties": True},
-                        "selector": {"type": ["string", "null"]},
-                        "value": {"type": ["string", "null"]},
-                        "symbol": {"type": ["string", "null"]},
-                        "sql": {"type": ["string", "null"]},
-                        "path": {"type": ["string", "null"]},
-                        "url": {"type": ["string", "null"]},
-                        "query": {"type": ["string", "null"]},
-                        "limit": {"type": ["integer", "null"]},
-                        "offset": {"type": ["integer", "null"]},
-                    },
-                    "required": ["type", "reason", "args", "selector", "value", "symbol", "sql", "path", "url", "query", "limit", "offset"],
-                    "additionalProperties": False,
-                },
+                "items": {"anyOf": action_schemas} if len(action_schemas) > 1 else action_schemas[0],
             },
         },
         "required": ["message", "actions"],
@@ -729,7 +774,7 @@ def _shared_agent_instructions() -> List[str]:
         "When getVisibleProducts returns a visible catalog count and structured item list, treat it as complete storefront evidence for the current page state unless the page changes.",
         "Keep web research tight: usually no more than 6 targeted searches per turn, and avoid repeating near-duplicate searches for the same product once you have an official source plus one strong review/comparison source.",
         "Do not emit webSearch or fetchWebPage actions unless bridge web tools are explicitly available and native agent tools are unavailable or clearly insufficient.",
-        "For installed bridge extension tools, put tool inputs inside args and leave unrelated flat fields null.",
+        "For installed bridge extension tools, put tool inputs inside the args object.",
         "Use renderAgentHtml for live workspace updates when the host exposes an Agent Workspace.",
     ]
     return parts
@@ -744,7 +789,7 @@ def _build_prompt(messages: List[Dict[str, Any]], app_context: Optional[Dict[str
     parts.extend([
         "If native agent tools are available, prefer them for general web research, reading, reasoning, and other non-website-specific work.",
         "Return strict JSON that matches the provided schema.",
-        "For every action object, include args, selector, value, symbol, sql, path, url, query, limit, and offset. Use null when not applicable.",
+        "Each action type has its own required fields; only include the fields relevant to that action type.",
     ])
     tool_prompt_lines = _bridge_tool_prompt_lines()
     if tool_prompt_lines:
@@ -890,6 +935,43 @@ def _codex_exec_streaming(prompt: str, schema_filename: str, timeout: int = 180)
     yield {"_event": "done", "result": result}
 
 
+def _persistent_session_streaming(prompt: str, origin: str, timeout: int = 180):
+    """Stream events from a persistent Codex session instead of one-shot exec."""
+    session = get_or_create_session(
+        origin=origin,
+        codex_cli_path=_codex_cli_path(),
+        cwd=str(PACKAGE_ROOT),
+        extra_args=_codex_extra_cli_args() + (["--search"] if _hybrid_agent_tools_enabled() else []),
+        hidden_kwargs=_hidden_subprocess_kwargs(),
+    )
+    collected_items: List[Dict[str, Any]] = []
+    try:
+        for event in session.send_turn(prompt, timeout=float(timeout) if timeout else 180.0):
+            if isinstance(event, dict) and event.get("_event") == "error":
+                yield event
+                return
+            if isinstance(event, dict) and event.get("type") == "item.completed":
+                collected_items.append(event.get("item") or {})
+            yield event
+    except Exception as exc:
+        yield {"_event": "error", "error": str(exc)}
+        return
+    message_parts = []
+    for item in collected_items:
+        if isinstance(item, dict) and item.get("type") == "agent_message":
+            message_parts.append(str(item.get("text") or ""))
+    final_text = "\n".join(message_parts).strip()
+    parsed = _extract_json_object(final_text)
+    if isinstance(parsed, dict):
+        result = _normalize_response(parsed, "codex-persistent")
+    elif final_text:
+        result = _normalize_response({"message": final_text, "actions": []}, "codex-persistent")
+    else:
+        yield {"_event": "error", "error": "Persistent session returned no agent message"}
+        return
+    yield {"_event": "done", "result": result}
+
+
 def _verify_final_response(candidate: Dict[str, Any], messages: List[Dict[str, Any]], app_context: Optional[Dict[str, Any]], native_activity: Optional[List[str]] = None) -> Dict[str, Any]:
     if not _VERIFY_FINAL or candidate.get("actions"):
         return candidate
@@ -932,8 +1014,7 @@ def _claude_cli_request(messages: List[Dict[str, Any]], app_context: Optional[Di
     prompt_parts.extend([
         "If native Claude tools are available in this session, prefer them for general research and reasoning before falling back to website actions.",
         "Return strict JSON only with keys: message, actions.",
-        "Each action must include keys: type, reason, args, selector, value, symbol, sql, path, url, query, limit, offset.",
-        "Use null for any action fields that do not apply.",
+        "Each action type has its own required fields; only include the fields relevant to that action type.",
     ])
     tool_prompt_lines = _bridge_tool_prompt_lines()
     if tool_prompt_lines:
@@ -1437,6 +1518,8 @@ def create_app() -> Flask:
         if remote not in ("127.0.0.1", "::1", "::ffff:127.0.0.1", "localhost"):
             return jsonify({"ok": False, "error": "shutdown only allowed from localhost"}), 403
 
+        closed = close_all_sessions()
+
         def _terminate() -> None:
             time.sleep(0.2)
             try:
@@ -1445,7 +1528,7 @@ def create_app() -> Flask:
                 os._exit(0)
 
         threading.Thread(target=_terminate, daemon=True).start()
-        return jsonify({"ok": True, "stopping": True})
+        return jsonify({"ok": True, "stopping": True, "persistent_sessions_closed": closed})
 
     @app.route("/api/tools/manifest", methods=["GET"])
     def api_tools_manifest():
@@ -1475,6 +1558,17 @@ def create_app() -> Flask:
 
     @app.route("/api/codex/cancel", methods=["POST"])
     def api_codex_cancel():
+        # Try persistent session interrupt first
+        if persistent_sessions_enabled():
+            origin = str(request.headers.get("Origin") or (request.get_json(silent=True) or {}).get("origin") or "").strip()
+            session = get_or_create_session(
+                origin=origin,
+                codex_cli_path=_codex_cli_path(),
+                cwd=str(PACKAGE_ROOT),
+            )
+            if session.is_alive:
+                session.interrupt()
+                return jsonify({"ok": True, "killed": True, "method": "persistent_interrupt"})
         with _ACTIVE_CODEX_LOCK:
             proc = _ACTIVE_CODEX_PROC
         if proc is not None and proc.poll() is None:
@@ -1488,17 +1582,24 @@ def create_app() -> Flask:
         messages = payload.get("messages") or []
         app_context = payload.get("app_context") if isinstance(payload.get("app_context"), dict) else {}
         fast_mode = True if payload.get("fast_mode") is None else bool(payload.get("fast_mode"))
+        origin = str(request.headers.get("Origin") or payload.get("origin") or "").strip()
         started = time.time()
         accepts_stream = "text/event-stream" in str(request.headers.get("Accept") or "").lower()
         wants_stream = bool(payload.get("stream")) or accepts_stream
         if wants_stream:
             prompt = _build_prompt(messages=messages, app_context=app_context)
+            use_persistent = persistent_sessions_enabled()
 
             def generate():
                 final_result = None
                 error_msg = None
                 native_activity: List[str] = []
-                for event in _codex_exec_streaming(prompt, "codex_response_schema.json", timeout=0):
+                event_source = (
+                    _persistent_session_streaming(prompt, origin=origin, timeout=0)
+                    if use_persistent
+                    else _codex_exec_streaming(prompt, "codex_response_schema.json", timeout=0)
+                )
+                for event in event_source:
                     if isinstance(event, dict) and event.get("_event") == "error":
                         error_msg = str(event.get("error") or "unknown error")
                         break

@@ -30,16 +30,16 @@ Optional smoother local install:
 - user runs `local-agent-bridge-install`
 - this registers `webagent://`
 - if localhost discovery fails, the widget can try `webagent://open-bridge`
-- the installed desktop companion can then start/focus the local bridge
+- the installed or Python-run desktop companion can then start/focus the local bridge
 
 ### Current platform state
 
 - Windows:
   packaged setup app exists today
 - macOS:
-  source-based install works best for now; signed `.app` packaging is not finished
+  source-based install works best for now; the desktop companion is a Python-installed GUI helper, not a polished packaged `.app`
 - Linux:
-  packaged setup bundle exists; distro-native packaging is not finished
+  source-based install works best today unless you build the setup bundle yourself; the desktop companion is a Python-installed GUI helper, not polished distro-native packaging
 
 ## Model B: Site-Hosted Backend
 

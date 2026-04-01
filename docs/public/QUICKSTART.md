@@ -95,11 +95,18 @@ Run:
 local-agent-bridge
 ```
 
-Optional desktop companion:
+Optional Python desktop companion after `pip install .`:
 
 ```bash
 local-agent-bridge-app
 ```
+
+Notes:
+
+- `local-agent-bridge` is the required local service
+- `local-agent-bridge-app` is only a convenience GUI
+- it is not a packaged native macOS app yet
+- it may require a Python build that includes `tkinter`
 
 Optional protocol registration:
 
@@ -143,11 +150,18 @@ Run:
 local-agent-bridge
 ```
 
-Optional desktop companion:
+Optional Python desktop companion after install:
 
 ```bash
 local-agent-bridge-app
 ```
+
+Notes:
+
+- `local-agent-bridge` is the required local service
+- `local-agent-bridge-app` is only a convenience GUI
+- on Linux it usually runs from the installed Python package unless you build your own setup bundle
+- depending on distro, you may need Tk packages for it
 
 Optional protocol registration:
 

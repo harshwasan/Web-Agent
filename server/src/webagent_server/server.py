@@ -4,6 +4,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import html as html_lib
+import importlib.util
 import json
 import os
 import re
@@ -17,6 +18,11 @@ from datetime import date, datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+try:
+    from importlib import metadata as importlib_metadata
+except Exception:  # pragma: no cover
+    import importlib_metadata  # type: ignore
 
 import requests
 from flask import Flask, Response, jsonify, request
@@ -32,6 +38,8 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 DOCS_DIR = Path(__file__).resolve().with_name("docs")
 DATA_DIR = Path(str(os.getenv("WEBAGENT_DATA_DIR", "") or "")).expanduser() if str(os.getenv("WEBAGENT_DATA_DIR", "") or "").strip() else (Path.home() / ".local-agent-bridge")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+PLUGIN_DIR = DATA_DIR / "plugins"
+PLUGIN_DIR.mkdir(parents=True, exist_ok=True)
 APPROVED_ORIGINS_FILE = DATA_DIR / "approved_origins.json"
 APPROVAL_LOG_DIR = DATA_DIR / "approval_logs"
 APPROVAL_LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -42,6 +50,8 @@ _ACTIVE_CLAUDE_LOCK = threading.Lock()
 _ACTIVE_CLAUDE_PROC = None
 _APPROVAL_TOKENS_LOCK = threading.Lock()
 _APPROVAL_TOKENS: Dict[str, Dict[str, Any]] = {}
+_BRIDGE_TOOLS_LOCK = threading.Lock()
+_BRIDGE_TOOLS_CACHE: Optional[Dict[str, Dict[str, Any]]] = None
 
 _PROMPT_TOKEN_BUDGET = max(2000, int(os.getenv("CODEX_PROMPT_TOKEN_BUDGET", "12000") or 12000))
 _SUMMARY_MAX_LINES = max(4, int(os.getenv("CODEX_SUMMARY_MAX_LINES", "20") or 20))
@@ -68,9 +78,264 @@ def _hidden_subprocess_kwargs() -> Dict[str, Any]:
     return kwargs
 
 
+def _kill_process_tree(proc: Optional[subprocess.Popen]) -> bool:
+    if proc is None:
+        return False
+    try:
+        if proc.poll() is not None:
+            return False
+    except Exception:
+        return False
+    try:
+        if os.name == "nt":
+            subprocess.run(
+                ["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                **_hidden_subprocess_kwargs(),
+            )
+        else:
+            try:
+                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+            except Exception:
+                proc.kill()
+        try:
+            proc.wait(timeout=10)
+        except Exception:
+            pass
+        return True
+    except Exception:
+        try:
+            proc.kill()
+            proc.wait(timeout=5)
+            return True
+        except Exception:
+            return False
+
+
+def _plugin_context() -> Dict[str, Any]:
+    return {
+        "data_dir": DATA_DIR,
+        "plugin_dir": PLUGIN_DIR,
+        "downloads_dir": Path.home() / "Downloads",
+    }
+
+
+def _normalize_tool_name(value: Any) -> str:
+    raw = str(value or "").strip()
+    return raw if re.match(r"^[A-Za-z][A-Za-z0-9_]*$", raw) else ""
+
+
+def _tool_manifest_view(tool: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "name": str(tool.get("name") or ""),
+        "description": str(tool.get("description") or "").strip(),
+        "args_schema": tool.get("args_schema") if isinstance(tool.get("args_schema"), dict) else {"type": "object"},
+        "permissions": list(tool.get("permissions") or []),
+        "source": str(tool.get("source") or "").strip(),
+    }
+
+
+def _load_tools_from_provider(provider: Any, source: str) -> List[Dict[str, Any]]:
+    tools = provider(_plugin_context()) if callable(provider) else provider
+    loaded: List[Dict[str, Any]] = []
+    for item in list(tools or []):
+        if not isinstance(item, dict):
+            continue
+        name = _normalize_tool_name(item.get("name"))
+        handler = item.get("handler")
+        if not name or not callable(handler):
+            continue
+        loaded.append({
+            "name": name,
+            "description": str(item.get("description") or "").strip(),
+            "args_schema": item.get("args_schema") if isinstance(item.get("args_schema"), dict) else {"type": "object"},
+            "permissions": [str(v).strip() for v in list(item.get("permissions") or []) if str(v).strip()],
+            "handler": handler,
+            "source": source,
+        })
+    return loaded
+
+
+def _load_tools_from_module(module: Any, source: str) -> List[Dict[str, Any]]:
+    if hasattr(module, "register_tools") and callable(module.register_tools):  # type: ignore[attr-defined]
+        return _load_tools_from_provider(module.register_tools, source)  # type: ignore[attr-defined]
+    if hasattr(module, "TOOLS"):
+        return _load_tools_from_provider(getattr(module, "TOOLS"), source)
+    return []
+
+
+def _discover_bridge_tools() -> Dict[str, Dict[str, Any]]:
+    discovered: Dict[str, Dict[str, Any]] = {}
+
+    def add_tools(items: List[Dict[str, Any]]) -> None:
+        for tool in items:
+            discovered[str(tool["name"])] = tool
+
+    try:
+        from webagent_server.plugins import save_text_file
+
+        add_tools(_load_tools_from_module(save_text_file, "builtin:webagent_server.plugins.save_text_file"))
+    except Exception:
+        pass
+
+    try:
+        entry_points = importlib_metadata.entry_points()
+        selected = entry_points.select(group="webagent.plugins") if hasattr(entry_points, "select") else entry_points.get("webagent.plugins", [])
+        for entry_point in selected:
+            try:
+                loaded = entry_point.load()
+                source = "package:" + str(getattr(entry_point, "name", "") or "plugin")
+                if hasattr(loaded, "register_tools") or hasattr(loaded, "TOOLS"):
+                    add_tools(_load_tools_from_module(loaded, source))
+                else:
+                    add_tools(_load_tools_from_provider(loaded, source))
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+    try:
+        for path in sorted(PLUGIN_DIR.glob("*.py")):
+            try:
+                spec = importlib.util.spec_from_file_location("webagent_plugin_" + path.stem, str(path))
+                if spec is None or spec.loader is None:
+                    continue
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                add_tools(_load_tools_from_module(module, "file:" + str(path)))
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return discovered
+
+
+def _bridge_tools() -> Dict[str, Dict[str, Any]]:
+    global _BRIDGE_TOOLS_CACHE
+    with _BRIDGE_TOOLS_LOCK:
+        if _BRIDGE_TOOLS_CACHE is None:
+            _BRIDGE_TOOLS_CACHE = _discover_bridge_tools()
+        return dict(_BRIDGE_TOOLS_CACHE)
+
+
+def _bridge_tool_manifests() -> List[Dict[str, Any]]:
+    return [_tool_manifest_view(tool) for _, tool in sorted(_bridge_tools().items(), key=lambda item: item[0].lower())]
+
+
+def _bridge_tool_prompt_lines() -> List[str]:
+    tools = _bridge_tool_manifests()
+    if not tools:
+        return []
+    lines = [
+        "Installed bridge extension tools are also available. To call one, set action.type to the exact tool name and put the tool inputs inside args.",
+        "Installed bridge tools:",
+    ]
+    for tool in tools[:24]:
+        args_schema = tool.get("args_schema") if isinstance(tool.get("args_schema"), dict) else {}
+        props = args_schema.get("properties") if isinstance(args_schema.get("properties"), dict) else {}
+        arg_names = ", ".join(list(props.keys())[:8])
+        detail = "- %s: %s" % (tool["name"], _clip_text(tool.get("description") or "", 180))
+        if arg_names:
+            detail += " | args: " + arg_names
+        if tool.get("permissions"):
+            detail += " | permissions: " + ", ".join(tool["permissions"][:6])
+        lines.append(detail)
+    return lines
+
+
+def _execute_bridge_tool(name: str, args: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    tools = _bridge_tools()
+    tool = tools.get(str(name or "").strip())
+    if not tool:
+        raise ValueError("unknown tool: " + str(name or ""))
+    payload = dict(args or {}) if isinstance(args, dict) else {}
+    result = tool["handler"](payload, _plugin_context())
+    if isinstance(result, dict):
+        output = dict(result)
+    else:
+        output = {"ok": True, "result": result}
+    output.setdefault("ok", True)
+    output.setdefault("tool", tool["name"])
+    output.setdefault("source", tool["source"])
+    return output
+
+
 def _clip_text(value: Any, limit: int) -> str:
     text = str(value or "").strip()
     return text if len(text) <= limit else text[: max(0, limit - 3)] + "..."
+
+
+def _summarize_progress_text(value: Any) -> str:
+    return _clip_text(re.sub(r"\s+", " ", str(value or "")).strip(), 180)
+
+
+def _summarize_progress_url(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    try:
+        from urllib.parse import urlparse
+
+        parsed = urlparse(text)
+        if parsed.scheme and parsed.netloc:
+            return _clip_text((parsed.netloc + parsed.path).strip(), 140)
+    except Exception:
+        pass
+    return _clip_text(text, 140)
+
+
+def _describe_native_progress_event(event: Any) -> Optional[str]:
+    if not isinstance(event, dict):
+        return None
+    event_type = str(event.get("type") or "").strip()
+    item = event.get("item") if isinstance(event.get("item"), dict) else {}
+    item_type = str(item.get("type") or "").strip()
+    if event_type in ("thinking", "heartbeat"):
+        return _summarize_progress_text(event.get("text") or "Thinking...")
+    if event_type == "thread.started":
+        return "Session started"
+    if event_type == "turn.started":
+        return "Thinking..."
+    if event_type == "turn.completed":
+        return "Turn complete"
+    if event_type == "item.started":
+        if item_type == "web_search":
+            query = _summarize_progress_text(item.get("query") or ((item.get("action") or {}).get("query") if isinstance(item.get("action"), dict) else ""))
+            return f"Searching web: {query}" if query else "Searching web..."
+        if item_type == "web_fetch":
+            url = _summarize_progress_url(item.get("url") or item.get("href"))
+            return f"Fetching page: {url}" if url else "Fetching page..."
+        if item_type == "command_execution":
+            command = _summarize_progress_text(item.get("command") or item.get("cmd") or item.get("executable") or item.get("program"))
+            return f"Running command: {command}" if command else "Running command..."
+        if item_type == "mcp_tool_call":
+            label = _clip_text(item.get("tool") or item.get("server") or "MCP tool", 100)
+            return f"Calling {label}..."
+        if item_type == "agent_message":
+            return _summarize_progress_text(item.get("text") or item.get("content") or "Agent update...")
+    if event_type == "item.completed":
+        if item_type == "web_search":
+            query = _summarize_progress_text(item.get("query") or ((item.get("action") or {}).get("query") if isinstance(item.get("action"), dict) else ""))
+            return f"Searched web: {query}" if query else "Web search done"
+        if item_type == "web_fetch":
+            url = _summarize_progress_url(item.get("url") or item.get("href"))
+            return f"Fetched page: {url}" if url else "Page fetch done"
+        if item_type == "command_execution":
+            command = _summarize_progress_text(item.get("command") or item.get("cmd") or item.get("executable") or item.get("program"))
+            exit_code = item.get("exit_code")
+            if exit_code in (None, 0):
+                return f"Command done: {command}" if command else "Command done"
+            return f"Command failed ({exit_code}): {command}" if command else f"Command failed (exit {exit_code})"
+        if item_type == "mcp_tool_call":
+            label = _clip_text(item.get("tool") or item.get("server") or "tool", 100)
+            return f"Tool call failed: {label}" if str(item.get("status") or "") == "failed" else f"Tool call done: {label}"
+        if item_type == "agent_message":
+            return _summarize_progress_text(item.get("text") or item.get("content"))
+    if event.get("text"):
+        return _summarize_progress_text(event.get("text"))
+    return None
 
 
 def _strip_html_text(raw_html: Any) -> str:
@@ -164,7 +429,40 @@ def _compact_app_context(app_context: Optional[Dict[str, Any]]) -> Dict[str, Any
     ]
     if isinstance(app_context.get("host_context"), dict):
         compact["host_context"] = {str(k)[:64]: _clip_text(v, 300) for k, v in list(app_context.get("host_context").items())[:16]}
+    run_log_entries = app_context.get("run_log_tail") or app_context.get("run_log")
+    if isinstance(run_log_entries, list):
+        compact["run_log_tail"] = [
+            {
+                "ts": _clip_text(item.get("ts"), 40),
+                "kind": _clip_text(item.get("kind"), 32),
+                "detail": _clip_text(item.get("detail"), 220),
+            }
+            for item in run_log_entries[-40:]
+            if isinstance(item, dict) and (item.get("detail") or item.get("kind"))
+        ]
     return compact
+
+
+def _run_log_section(app_context: Optional[Dict[str, Any]]) -> str:
+    if not isinstance(app_context, dict):
+        return ""
+    run_log_entries = app_context.get("run_log_tail") or app_context.get("run_log")
+    if not isinstance(run_log_entries, list):
+        return ""
+    lines: List[str] = []
+    for item in run_log_entries[-40:]:
+        if not isinstance(item, dict):
+            continue
+        detail = _clip_text(item.get("detail"), 220)
+        kind = _clip_text(item.get("kind"), 32)
+        ts = _clip_text(item.get("ts"), 40)
+        if not detail and not kind:
+            continue
+        prefix = f"[{ts}] " if ts else ""
+        if kind:
+            prefix += kind + " - "
+        lines.append("- " + prefix + (detail or "(no detail)"))
+    return "\n".join(lines).strip()
 
 
 def _hosted_docs_section(app_context: Optional[Dict[str, Any]]) -> str:
@@ -261,6 +559,9 @@ def _website_action_types() -> List[str]:
         "fetchDbTables",
         "fetchDbStatus",
         "exportQueryToCsv",
+        "getPageState",
+        "getVisibleProducts",
+        "getDomTree",
         "fetchDomHtml",
         "renderAgentHtml",
         "appendAgentHtml",
@@ -282,6 +583,7 @@ def _response_schema() -> Dict[str, Any]:
                     "properties": {
                         "type": {"type": "string"},
                         "reason": {"type": "string"},
+                        "args": {"type": ["object", "null"], "additionalProperties": True},
                         "selector": {"type": ["string", "null"]},
                         "value": {"type": ["string", "null"]},
                         "symbol": {"type": ["string", "null"]},
@@ -292,7 +594,7 @@ def _response_schema() -> Dict[str, Any]:
                         "limit": {"type": ["integer", "null"]},
                         "offset": {"type": ["integer", "null"]},
                     },
-                    "required": ["type", "reason", "selector", "value", "symbol", "sql", "path", "url", "query", "limit", "offset"],
+                    "required": ["type", "reason", "args", "selector", "value", "symbol", "sql", "path", "url", "query", "limit", "offset"],
                     "additionalProperties": False,
                 },
             },
@@ -319,6 +621,7 @@ def _normalize_agent_action(action: Any) -> Dict[str, Any]:
     normalized = {
         "type": str(base.get("type") or "").strip(),
         "reason": str(base.get("reason") or "").strip(),
+        "args": dict(args) if args else None,
         "selector": pick("selector"),
         "value": pick("value", "html"),
         "symbol": pick("symbol"),
@@ -388,11 +691,25 @@ def _build_prompt(messages: List[Dict[str, Any]], app_context: Optional[Dict[str
         "Use website action objects only for host-specific UI operations, Agent Workspace rendering, and bridge-backed helpers.",
         "If native agent tools are available, prefer them for general web research, reading, reasoning, and other non-website-specific work.",
         "Host-provided docs may include inline same-origin file contents from the page; treat those embedded files as authoritative website reference material.",
+        "Do not use local shell commands or local filesystem searches to discover website content, selectors, products, or page state unless the user explicitly asks about local repo files.",
+        "Assume a normal end user does not have a local checkout of the website. For host evidence, rely on app context, host-provided inline docs, website actions, and same-origin web content instead of local workspace files.",
+        "For website tasks, command execution for local file or shell inspection is forbidden unless the user explicitly asks about local project files.",
+        "Prefer structured website reads like getVisibleProducts and getPageState before using raw fetchDomHtml on dynamic catalog pages.",
+        "Use getDomTree as a compact live semantic snapshot of the page or a specific container when you need to understand layout, controls, or visible sections without pulling full HTML.",
+        "For getDomTree actions: selector is the root selector (or null for body), offset is max depth, limit is max nodes, and value is the per-node text limit.",
+        "Do not run native shell commands like rg, grep, pwsh, bash, dir, or Get-ChildItem just to inspect the current website when website actions or inline host docs can answer it.",
+        "If you are about to inspect local files to answer a website question, stop and use website actions or host-provided docs instead.",
+        "When getVisibleProducts returns a visible catalog count and structured item list, treat it as complete storefront evidence for the current page state unless the page changes.",
+        "Keep web research tight: usually no more than 6 targeted searches per turn, and avoid repeating near-duplicate searches for the same product once you have an official source plus one strong review/comparison source.",
         "Do not emit webSearch or fetchWebPage actions unless bridge web tools are explicitly available and native agent tools are unavailable or clearly insufficient.",
         "Return strict JSON that matches the provided schema.",
-        "For every action object, include selector, value, symbol, sql, path, url, query, limit, and offset. Use null when not applicable.",
+        "For every action object, include args, selector, value, symbol, sql, path, url, query, limit, and offset. Use null when not applicable.",
+        "For installed bridge extension tools, put tool inputs inside args and leave unrelated flat fields null.",
         "Use renderAgentHtml for live workspace updates when the host exposes an Agent Workspace.",
     ]
+    tool_prompt_lines = _bridge_tool_prompt_lines()
+    if tool_prompt_lines:
+        parts.append("\n".join(tool_prompt_lines))
     extra = _app_instructions_text()
     if extra:
         parts.append("App-specific instructions:\n" + extra)
@@ -437,10 +754,7 @@ def _codex_exec_structured(prompt: str, schema_filename: str, timeout: int = 180
     try:
         stdout, stderr = proc.communicate(input=prompt, timeout=timeout)
     except subprocess.TimeoutExpired:
-        try:
-            proc.kill()
-        except Exception:
-            pass
+        _kill_process_tree(proc)
         raise RuntimeError("Codex CLI timed out after %d seconds" % timeout)
     finally:
         with _ACTIVE_CODEX_LOCK:
@@ -491,10 +805,7 @@ def _codex_exec_streaming(prompt: str, schema_filename: str, timeout: int = 180)
     try:
         for raw_line in proc.stdout or []:
             if deadline and time.time() > deadline:
-                try:
-                    proc.kill()
-                except Exception:
-                    pass
+                _kill_process_tree(proc)
                 yield {"_event": "error", "error": "Codex CLI timed out after %d seconds" % timeout}
                 return
             raw_line = str(raw_line or "").strip()
@@ -509,10 +820,7 @@ def _codex_exec_streaming(prompt: str, schema_filename: str, timeout: int = 180)
             yield event
         proc.wait(timeout=10)
     except Exception as exc:
-        try:
-            proc.kill()
-        except Exception:
-            pass
+        _kill_process_tree(proc)
         yield {"_event": "error", "error": str(exc)}
         return
     finally:
@@ -543,20 +851,27 @@ def _codex_exec_streaming(prompt: str, schema_filename: str, timeout: int = 180)
     yield {"_event": "done", "result": result}
 
 
-def _verify_final_response(candidate: Dict[str, Any], messages: List[Dict[str, Any]], app_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+def _verify_final_response(candidate: Dict[str, Any], messages: List[Dict[str, Any]], app_context: Optional[Dict[str, Any]], native_activity: Optional[List[str]] = None) -> Dict[str, Any]:
     if not _VERIFY_FINAL or candidate.get("actions"):
         return candidate
     docs = _context_docs()
     compact_context = _compact_app_context(app_context)
     compact_messages = _compact_messages(messages)
+    run_log_section = _run_log_section(app_context)
     prompt_parts = [
         "Review the proposed final answer for false completion or unsupported claims.",
         "Return strict JSON that matches the provided schema.",
+        "Treat native agent activity and run-log evidence as valid evidence of what the agent actually did, even if no explicit bridge webSearch or fetchWebPage actions were emitted.",
+        "Do not reject web-research claims solely because the resolved website actions only include renderAgentHtml or other host-specific actions if native web_search or web_fetch activity is documented below.",
     ]
     if docs["text"]:
         prompt_parts.append("Project context docs:\n" + docs["text"])
     if compact_context:
         prompt_parts.append("App context JSON:\n" + json.dumps(compact_context, ensure_ascii=True))
+    if run_log_section:
+        prompt_parts.append("Recent run log:\n" + run_log_section)
+    if native_activity:
+        prompt_parts.append("Current turn native activity:\n" + "\n".join("- " + _clip_text(item, 220) for item in native_activity[-30:] if str(item or "").strip()))
     if compact_messages["older_summary"]:
         prompt_parts.append("Older conversation summary:\n" + "\n".join(compact_messages["older_summary"]))
     prompt_parts.append("Recent conversation:\n" + "\n".join(compact_messages["recent_messages"]))
@@ -578,11 +893,25 @@ def _claude_cli_request(messages: List[Dict[str, Any]], app_context: Optional[Di
         "Use website action objects only for host-specific UI operations, Agent Workspace rendering, and bridge-backed helpers.",
         "If native Claude tools are available in this session, prefer them for general research and reasoning before falling back to website actions.",
         "Host-provided docs may include inline same-origin file contents from the page; treat those embedded files as authoritative website reference material.",
+        "Do not use local shell commands or local filesystem searches to discover website content, selectors, products, or page state unless the user explicitly asks about local repo files.",
+        "Assume a normal end user does not have a local checkout of the website. For host evidence, rely on app context, host-provided inline docs, website actions, and same-origin web content instead of local workspace files.",
+        "For website tasks, command execution for local file or shell inspection is forbidden unless the user explicitly asks about local project files.",
+        "Prefer structured website reads like getVisibleProducts and getPageState before using raw fetchDomHtml on dynamic pages.",
+        "Use getDomTree as a compact live semantic snapshot when you need to inspect page structure or a specific container without pulling full HTML.",
+        "For getDomTree actions: selector is the root selector (or null for body), offset is max depth, limit is max nodes, and value is the per-node text limit.",
+        "Do not run native shell commands like rg, grep, pwsh, bash, dir, or Get-ChildItem just to inspect the current website when website actions or inline host docs can answer it.",
+        "If you are about to inspect local files to answer a website question, stop and use website actions or host-provided docs instead.",
+        "When getVisibleProducts returns a visible catalog count and structured item list, treat it as complete storefront evidence for the current page state unless the page changes.",
+        "Keep web research tight: usually no more than 6 targeted searches per turn, and avoid repeating near-duplicate searches for the same product once you have an official source plus one strong review/comparison source.",
         "Do not emit webSearch or fetchWebPage actions unless bridge web tools are explicitly available and native tools are unavailable or clearly insufficient.",
         "Return strict JSON only with keys: message, actions.",
-        "Each action must include keys: type, reason, selector, value, symbol, sql, path, url, query, limit, offset.",
+        "Each action must include keys: type, reason, args, selector, value, symbol, sql, path, url, query, limit, offset.",
+        "For installed bridge extension tools, put tool inputs inside args and leave unrelated flat fields null.",
         "Use null for any action fields that do not apply.",
     ]
+    tool_prompt_lines = _bridge_tool_prompt_lines()
+    if tool_prompt_lines:
+        prompt_parts.append("\n".join(tool_prompt_lines))
     if docs["text"]:
         prompt_parts.append("Project context docs:\n" + docs["text"])
     if hosted_docs:
@@ -610,10 +939,7 @@ def _claude_cli_request(messages: List[Dict[str, Any]], app_context: Optional[Di
     try:
         stdout, stderr = proc.communicate(input="\n\n".join(prompt_parts), timeout=120)
     except subprocess.TimeoutExpired:
-        try:
-            proc.kill()
-        except Exception:
-            pass
+        _kill_process_tree(proc)
         raise RuntimeError("Claude CLI timed out after 120 seconds")
     finally:
         with _ACTIVE_CLAUDE_LOCK:
@@ -1095,6 +1421,20 @@ def create_app() -> Flask:
         threading.Thread(target=_terminate, daemon=True).start()
         return jsonify({"ok": True, "stopping": True})
 
+    @app.route("/api/tools/manifest", methods=["GET"])
+    def api_tools_manifest():
+        return jsonify({"ok": True, "tools": _bridge_tool_manifests(), "count": len(_bridge_tool_manifests())})
+
+    @app.route("/api/tools/execute", methods=["POST"])
+    def api_tools_execute():
+        payload = request.get_json(silent=True) or {}
+        tool_name = str(payload.get("tool") or "").strip()
+        args = payload.get("args") if isinstance(payload.get("args"), dict) else {}
+        try:
+            return jsonify(_execute_bridge_tool(tool_name, args))
+        except Exception as exc:
+            return jsonify({"ok": False, "tool": tool_name, "error": str(exc)}), 400
+
     @app.route("/api/codex/status", methods=["GET"])
     def api_codex_status():
         cli_path = _codex_cli_path()
@@ -1112,11 +1452,8 @@ def create_app() -> Flask:
         with _ACTIVE_CODEX_LOCK:
             proc = _ACTIVE_CODEX_PROC
         if proc is not None and proc.poll() is None:
-            try:
-                proc.kill()
-            except Exception:
-                pass
-            return jsonify({"ok": True, "killed": True})
+            killed = _kill_process_tree(proc)
+            return jsonify({"ok": True, "killed": killed})
         return jsonify({"ok": True, "killed": False, "reason": "no active process"})
 
     @app.route("/api/codex/chat", methods=["POST"])
@@ -1134,6 +1471,7 @@ def create_app() -> Flask:
             def generate():
                 final_result = None
                 error_msg = None
+                native_activity: List[str] = []
                 for event in _codex_exec_streaming(prompt, "codex_response_schema.json", timeout=0):
                     if isinstance(event, dict) and event.get("_event") == "error":
                         error_msg = str(event.get("error") or "unknown error")
@@ -1141,13 +1479,18 @@ def create_app() -> Flask:
                     if isinstance(event, dict) and event.get("_event") == "done":
                         final_result = event.get("result") or {}
                         break
+                    desc = _describe_native_progress_event(event)
+                    if desc:
+                        native_activity.append(desc)
+                        if len(native_activity) > 60:
+                            native_activity = native_activity[-60:]
                     yield "event: progress\ndata: %s\n\n" % json.dumps(event, ensure_ascii=True)
                 if error_msg:
                     yield "event: error\ndata: %s\n\n" % json.dumps({"ok": False, "error": error_msg, "duration_ms": int((time.time() - started) * 1000)}, ensure_ascii=True)
                     return
                 out = final_result or {}
                 if out and not fast_mode:
-                    out = _verify_final_response(out, messages=messages, app_context=app_context)
+                    out = _verify_final_response(out, messages=messages, app_context=app_context, native_activity=native_activity)
                 yield "event: done\ndata: %s\n\n" % json.dumps({"ok": True, "duration_ms": int((time.time() - started) * 1000), **out}, ensure_ascii=True)
 
             return Response(generate(), mimetype="text/event-stream", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-cache"})
@@ -1169,18 +1512,15 @@ def create_app() -> Flask:
         except Exception as exc:
             installed = False
             version = str(exc)
-        return jsonify({"ok": True, "installed": installed, "cli": cli_path, "version": version, "model": "claude-code-local"})
+        return jsonify({"ok": True, "installed": installed, "configured": installed, "cli": cli_path, "version": version, "model": "claude-code-local"})
 
     @app.route("/api/claude/cancel", methods=["POST"])
     def api_claude_cancel():
         with _ACTIVE_CLAUDE_LOCK:
             proc = _ACTIVE_CLAUDE_PROC
         if proc is not None and proc.poll() is None:
-            try:
-                proc.kill()
-            except Exception:
-                pass
-            return jsonify({"ok": True, "killed": True})
+            killed = _kill_process_tree(proc)
+            return jsonify({"ok": True, "killed": killed})
         return jsonify({"ok": True, "killed": False, "reason": "no active process"})
 
     @app.route("/api/claude/chat", methods=["POST"])
@@ -1206,12 +1546,20 @@ def create_app() -> Flask:
 
             def generate():
                 yield "event: progress\ndata: %s\n\n" % json.dumps({"type": "thinking", "text": "Asking Claude Code..."}, ensure_ascii=True)
+                next_heartbeat_at = time.time() + 5.0
                 while True:
                     try:
-                        kind, payload_ = q.get(timeout=1.0)
+                        kind, payload_ = q.get(timeout=0.5)
                         break
                     except queue.Empty:
-                        yield "event: progress\ndata: %s\n\n" % json.dumps({"type": "heartbeat", "text": "Waiting for Claude Code..."}, ensure_ascii=True)
+                        now = time.time()
+                        if now >= next_heartbeat_at:
+                            elapsed = int(now - started)
+                            message = "Still waiting for Claude Code..."
+                            if elapsed >= 10:
+                                message = "Still waiting for Claude Code (%ds)..." % elapsed
+                            yield "event: progress\ndata: %s\n\n" % json.dumps({"type": "heartbeat", "text": message}, ensure_ascii=True)
+                            next_heartbeat_at = now + 5.0
                 if kind == "done":
                     yield "event: done\ndata: %s\n\n" % json.dumps({"ok": True, "duration_ms": int((time.time() - started) * 1000), **payload_}, ensure_ascii=True)
                 else:

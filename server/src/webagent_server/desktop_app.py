@@ -395,7 +395,8 @@ class BridgeDesktopApp:
                     codex_text = "Codex: status check failed"
                 try:
                     claude = requests.get(bridge_base_url() + "/api/claude/status", timeout=2.0).json()
-                    claude_text = "Claude: " + ("installed" if claude.get("configured") else "missing") + " | " + str(claude.get("version") or claude.get("cli") or "-")
+                    claude_ready = bool(claude.get("configured")) or bool(claude.get("installed"))
+                    claude_text = "Claude: " + ("installed" if claude_ready else "missing") + " | " + str(claude.get("version") or claude.get("cli") or "-")
                 except Exception:
                     claude_text = "Claude: status check failed"
             status_text = "Bridge running" if running else "Bridge not running"

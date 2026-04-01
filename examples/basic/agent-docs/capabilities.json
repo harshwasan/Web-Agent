@@ -1,32 +1,34 @@
 {
-  "host_name": "Dealer Ops Demo Host",
+  "host_name": "Northstar Commerce Demo",
   "workspace_target": "#agent-workspace",
   "selectors": {
     "search_input": "#inventory-search",
-    "location_filter": "#location-filter",
+    "brand_filter": "#location-filter",
     "apply_filters_button": "#apply-filters-btn",
-    "fill_lc200_button": "#fill-lc200-btn",
     "refresh_button": "#refresh-inventory-btn",
-    "open_maintenance_button": "#open-maintenance-btn",
-    "toggle_premium_button": "#toggle-premium-btn"
+    "open_buying_guide_button": "#open-maintenance-btn",
+    "product_grid": "#inventory-body"
   },
   "supported_actions": [
     "clickSelector",
     "setInputValue",
+    "getPageState",
+    "getVisibleProducts",
+    "getDomTree",
     "renderAgentHtml",
     "appendAgentHtml",
     "fetchDomHtml"
   ],
   "api_files": [
     {
-      "name": "DemoInventoryApi",
+      "name": "DemoCatalogApi",
       "path": "/examples/basic/agent-docs/api-client.js",
       "kind": "javascript-class-reference"
     }
   ],
   "safe_test_prompts": [
-    "Summarize the host files and selectors.",
-    "Fill the search box with LC200 and refresh inventory.",
-    "Read the API class and explain what methods exist."
+    "Summarize the attached host docs, page state, and selectors.",
+    "Compare the visible product cards across different brands and render a buying table.",
+    "Explain what the demo API exposes and what the visible grid currently shows."
   ]
 }

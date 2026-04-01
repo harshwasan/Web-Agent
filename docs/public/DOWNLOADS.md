@@ -48,5 +48,6 @@ npm install ./webagent-widget-0.1.0.tgz
 ## Notes
 
 - Windows binaries are included directly in the repo right now so people can install immediately from GitHub.
-- macOS and Linux still have source-based install flows documented in the repo.
+- macOS and Linux still mainly use source-based / Python-installed flows documented in the repo.
+- `local-agent-bridge-app` on macOS/Linux is currently a Python-installed convenience GUI, not a polished packaged native app.
 - Linux/macOS native packaged binaries should ideally move to GitHub Releases later instead of staying in the source tree.

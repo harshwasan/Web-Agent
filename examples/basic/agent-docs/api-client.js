@@ -1,30 +1,39 @@
-export class DemoInventoryApi {
+export class DemoCatalogApi {
   constructor(baseUrl) {
     this.baseUrl = baseUrl || "/demo-api";
   }
 
-  async listInventory(filters) {
+  async listProducts(filters) {
     return {
-      endpoint: this.baseUrl + "/inventory",
+      endpoint: this.baseUrl + "/products",
       method: "GET",
       query: filters || {},
-      description: "Returns demo inventory rows for the host page."
+      description: "Returns seeded storefront products for the host page."
     };
   }
 
-  async getSupportSummary() {
+  async compareProducts(productIds) {
     return {
-      endpoint: this.baseUrl + "/support/summary",
-      method: "GET",
-      description: "Returns ticket counts, current alerts, and support notes."
+      endpoint: this.baseUrl + "/compare",
+      method: "POST",
+      body: { product_ids: productIds || [] },
+      description: "Builds a comparison payload for multiple products."
     };
   }
 
-  async openVehicleRecord(vehicleId) {
+  async getProduct(productId) {
     return {
-      endpoint: this.baseUrl + "/inventory/" + encodeURIComponent(vehicleId),
+      endpoint: this.baseUrl + "/products/" + encodeURIComponent(productId),
       method: "GET",
-      description: "Fetches a single vehicle record for detail rendering."
+      description: "Fetches a single product record for detail rendering."
+    };
+  }
+
+  async listAlternatives(productId) {
+    return {
+      endpoint: this.baseUrl + "/products/" + encodeURIComponent(productId) + "/alternatives",
+      method: "GET",
+      description: "Returns products from other brands that can be compared against the seed product."
     };
   }
 }

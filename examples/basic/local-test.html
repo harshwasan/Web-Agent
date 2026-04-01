@@ -202,6 +202,189 @@
       margin-bottom: 14px;
       align-items: center;
     }
+    .inventory-hero {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .shop-spotlight,
+    .shop-promo {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background:
+        linear-gradient(135deg, rgba(19, 91, 109, 0.10), rgba(255, 255, 255, 0.65)),
+        rgba(255, 255, 255, 0.82);
+    }
+    .shop-spotlight h3,
+    .shop-promo h3 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+    .shop-spotlight p,
+    .shop-promo p {
+      margin: 0;
+      color: var(--muted);
+    }
+    .shop-spotlight .hero-actions {
+      margin-top: 14px;
+    }
+    .shop-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .shop-stat {
+      border: 1px solid rgba(19, 91, 109, 0.14);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.78);
+    }
+    .shop-stat strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 18px;
+    }
+    .collection-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .collection-tags span {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(16, 34, 49, 0.12);
+      background: rgba(255, 255, 255, 0.85);
+      font-size: 13px;
+    }
+    .catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .product-card {
+      display: grid;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: #fff;
+      box-shadow: 0 10px 24px rgba(16, 34, 49, 0.06);
+    }
+    .product-media {
+      min-height: 140px;
+      border-radius: 16px;
+      padding: 14px;
+      background: linear-gradient(135deg, rgba(19, 91, 109, 0.10), rgba(16, 34, 49, 0.02));
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .product-icon {
+      display: inline-flex;
+      width: 54px;
+      height: 54px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(16, 34, 49, 0.10);
+      font-size: 24px;
+    }
+    .product-score {
+      text-align: right;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .product-score strong {
+      display: block;
+      font-size: 18px;
+      color: var(--ink);
+    }
+    .product-topline {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .product-topline h3 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.18;
+    }
+    .product-brand {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    .product-price {
+      font-size: 22px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .product-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid rgba(16, 34, 49, 0.12);
+      background: rgba(19, 91, 109, 0.07);
+      color: var(--ink);
+    }
+    .meta-pill.good {
+      color: var(--good);
+      background: rgba(27, 111, 75, 0.10);
+      border-color: rgba(27, 111, 75, 0.20);
+    }
+    .meta-pill.warn {
+      color: var(--warning);
+      background: rgba(165, 63, 43, 0.10);
+      border-color: rgba(165, 63, 43, 0.20);
+    }
+    .product-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .feature-list {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+      color: var(--ink);
+      font-size: 14px;
+    }
+    .product-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid rgba(16, 34, 49, 0.08);
+      padding-top: 12px;
+    }
+    .empty-state {
+      border: 1px dashed var(--line);
+      border-radius: 18px;
+      padding: 24px;
+      background: rgba(255, 255, 255, 0.7);
+      color: var(--muted);
+      text-align: center;
+    }
     .feed {
       list-style: none;
       padding: 0;
@@ -271,132 +454,102 @@
       .layout {
         grid-template-columns: 1fr;
       }
+      .inventory-hero {
+        grid-template-columns: 1fr;
+      }
+      .catalog-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 720px) {
+      .catalog-grid,
+      .shop-stats,
+      .support-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
   <div class="shell">
-    <section class="hero">
-      <div class="panel hero-main">
-        <div class="badge good" id="bridge-demo-badge">Host docs auto-attach to agent context</div>
-        <h1>Dealer Ops Demo Host</h1>
-        <p>
-          This page exists to test the embeddable widget against a realistic host. It has visible controls,
-          tabbed content, a workspace target, and three host-provided reference files that the widget can inline
-          into agent context: a website overview, a capabilities JSON file, and a JavaScript API class.
-        </p>
-        <div class="hero-actions">
-          <button id="fill-lc200-btn" class="primary" type="button">Fill Search With LC200</button>
-          <button id="refresh-inventory-btn" type="button">Refresh Inventory</button>
-          <button id="open-maintenance-btn" type="button">Open Maintenance Modal</button>
-          <button id="toggle-premium-btn" class="ghost" type="button">Toggle Premium Filter</button>
-        </div>
-      </div>
-      <aside class="panel hero-side">
-        <div class="stat-grid">
-          <div class="stat">
-            <div class="stat-label">Visible Stock</div>
-            <div class="stat-value" id="visible-stock-count">0</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">Open Tickets</div>
-            <div class="stat-value" id="open-ticket-count">4</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">Current Tab</div>
-            <div class="stat-value" id="current-tab-label">Inventory</div>
-          </div>
-        </div>
-        <div class="badge" id="inventory-status-pill">Inventory API healthy</div>
-        <div class="badge warn" id="approval-reminder-pill">Use the widget to inspect host docs and update the workspace</div>
-        <div class="callout">
-          Try asking the agent: "Read the host files and tell me what selectors and demo APIs this site exposes."
-        </div>
-      </aside>
-    </section>
+    <div id="demo-hidden-state" hidden>
+      <span id="bridge-demo-badge">Host docs auto-attach to agent context</span>
+      <span id="visible-stock-count">0</span>
+      <span id="open-ticket-count">10</span>
+      <span id="current-tab-label">Catalog</span>
+      <span id="inventory-status-pill">Catalog API healthy</span>
+      <span id="approval-reminder-pill">Use the widget to compare brands and update the workspace</span>
+    </div>
 
     <div class="layout">
       <main class="main-column">
         <section class="panel section">
           <div class="toolbar">
-            <input id="inventory-search" type="text" value="land cruiser" placeholder="Search inventory, ticket notes, or API docs">
+            <input id="inventory-search" type="text" value="" placeholder="Search products, features, or brands">
             <select id="location-filter">
-              <option value="all">All cities</option>
-              <option value="Delhi">Delhi</option>
-              <option value="Mumbai">Mumbai</option>
-              <option value="Bangalore">Bangalore</option>
+              <option value="all">All brands</option>
+              <option value="Sony">Sony</option>
+              <option value="Bose">Bose</option>
+              <option value="Apple">Apple</option>
+              <option value="Samsung">Samsung</option>
+              <option value="Sennheiser">Sennheiser</option>
+              <option value="Beats">Beats</option>
+              <option value="Nothing">Nothing</option>
+              <option value="Jabra">Jabra</option>
+              <option value="Bowers & Wilkins">Bowers & Wilkins</option>
+              <option value="Soundcore">Soundcore</option>
+              <option value="Dell">Dell</option>
+              <option value="Lenovo">Lenovo</option>
+              <option value="LG">LG</option>
+              <option value="Asus">Asus</option>
+              <option value="Logitech">Logitech</option>
+              <option value="Razer">Razer</option>
+              <option value="Microsoft">Microsoft</option>
+              <option value="Anker">Anker</option>
             </select>
             <button id="apply-filters-btn" type="button">Apply Filters</button>
+            <button id="refresh-inventory-btn" type="button">Refresh Catalog</button>
+            <button id="open-maintenance-btn" type="button">Open Buying Guide</button>
           </div>
-
-          <div class="tab-bar">
-            <button class="tab-btn active" data-tab="inventory" type="button">Inventory</button>
-            <button class="tab-btn" data-tab="support" type="button">Support Tools</button>
-            <button class="tab-btn" data-tab="api" type="button">Host Files</button>
+          <div class="inventory-actions">
+            <div class="badge" id="last-refresh-pill">Last refresh: not yet</div>
           </div>
-
-          <div class="tab-panel active" data-panel="inventory">
-            <div class="inventory-actions">
-              <div class="badge" id="premium-filter-pill">Premium filter off</div>
-              <div class="badge" id="last-refresh-pill">Last refresh: not yet</div>
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Model</th>
-                  <th>Year</th>
-                  <th>City</th>
-                  <th>Price</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="inventory-body"></tbody>
-            </table>
-          </div>
-
-          <div class="tab-panel" data-panel="support">
-            <div class="support-grid">
-              <div class="mini-card">
-                <h3>Safe Selectors</h3>
-                <p class="muted">These selectors are intentionally stable for agent tests.</p>
-                <code>#inventory-search</code><br>
-                <code>#refresh-inventory-btn</code><br>
-                <code>#open-maintenance-btn</code><br>
-                <code>#fill-lc200-btn</code><br>
-                <code>#toggle-premium-btn</code>
+          <div class="inventory-hero">
+            <div class="shop-spotlight">
+              <div class="badge good">Featured storefront section</div>
+              <h3>Shop audio, laptops, monitors, and creator gear in one storefront.</h3>
+              <p>Use the on-page controls or the agent to compare brands, narrow the catalog, and render structured buying guides into the Agent Workspace.</p>
+              <div class="shop-stats">
+                <div class="shop-stat">
+                  Curated brands
+                  <strong>10</strong>
+                </div>
+                <div class="shop-stat">
+                  Product range
+                  <strong>$69-$2999</strong>
+                </div>
+                <div class="shop-stat">
+                  Card-based browsing
+                  <strong>Live</strong>
+                </div>
               </div>
-              <div class="mini-card">
-                <h3>Supported Behaviors</h3>
-                <p class="muted">The page responds to click and input actions and exposes a workspace target.</p>
-                <ul>
-                  <li>Search text filters the table.</li>
-                  <li>Modal can be opened and closed.</li>
-                  <li>Workspace can be replaced with agent-rendered HTML.</li>
-                </ul>
+            </div>
+            <div class="shop-promo">
+              <h3>Collections built for comparison</h3>
+              <p>The demo is optimized for prompts like budget shopping, side-by-side category comparisons, competitor alternatives, and workspace-ready buying guides.</p>
+              <div class="collection-tags">
+                <span>Noise cancelling</span>
+                <span>Creator laptops</span>
+                <span>Gaming gear</span>
+                <span>Displays</span>
+                <span>Speakers</span>
+                <span>Desk setup</span>
               </div>
             </div>
           </div>
-
-          <div class="tab-panel" data-panel="api">
-            <h3>Host Reference Files</h3>
-            <p class="muted">
-              These same-origin files are linked with <code>rel="agent-doc"</code> and are automatically attached into
-              the widget context as small inline files.
-            </p>
-            <div class="doc-list">
-              <a data-agent-doc href="./agent-docs/website-overview.md">website-overview.md</a>
-              <a data-agent-doc href="./agent-docs/capabilities.json">capabilities.json</a>
-              <a data-agent-doc href="./agent-docs/api-client.js">api-client.js</a>
-            </div>
-          </div>
+          <div id="inventory-body" class="catalog-grid" aria-live="polite"></div>
         </section>
 
-        <section id="agent-workspace" data-agent-workspace="main" class="panel section">
-          <h2>Agent Workspace</h2>
-          <p class="muted">
-            Agent-rendered HTML appears here. The host files above should also be visible to the agent as inline context.
-          </p>
-        </section>
       </main>
 
       <aside class="side-column">
@@ -407,27 +560,25 @@
           <ul id="activity-feed" class="feed"></ul>
         </section>
 
-        <section class="panel section">
-          <h2>Suggested Tests</h2>
-          <ul>
-            <li>Ask the agent to summarize the host files and list the selectors it can use.</li>
-            <li>Ask it to fill the search box with LC200, refresh inventory, and show a summary in the workspace.</li>
-            <li>Ask it to read the API class file and explain what methods the demo site exposes.</li>
-          </ul>
+        <section id="agent-workspace" data-agent-workspace="main" class="panel section">
+          <h2>Agent Workspace</h2>
+          <p class="muted">
+            Agent-rendered HTML appears here. The attached host docs are also available to the agent as inline context.
+          </p>
         </section>
+
       </aside>
     </div>
   </div>
 
   <div id="maintenance-modal" aria-hidden="true">
     <div class="modal-card">
-      <h3>Maintenance Window</h3>
+      <h3>Buying Guide</h3>
       <p class="muted">
-        This dialog exists so the agent can demonstrate host-specific UI interactions. Closing it should write an entry
-        into the activity feed.
+        This dialog exists so the agent can demonstrate host-specific UI interactions while reviewing product strategy.
       </p>
       <div class="hero-actions">
-        <button id="confirm-maintenance-btn" class="primary" type="button">Confirm Window</button>
+        <button id="confirm-maintenance-btn" class="primary" type="button">Use Guide</button>
         <button id="close-maintenance-btn" type="button">Close</button>
       </div>
     </div>
@@ -437,21 +588,69 @@
   <script>
     (function () {
       var inventoryRows = [
-        { model: "Toyota Land Cruiser LC200 ZX", year: 2021, city: "Delhi", price: "Rs 2.14 Cr", status: "Featured" },
-        { model: "Toyota Land Cruiser VX", year: 2018, city: "Mumbai", price: "Rs 1.52 Cr", status: "Live" },
-        { model: "Lexus LX570", year: 2019, city: "Bangalore", price: "Rs 1.88 Cr", status: "Watchlist" },
-        { model: "Toyota Fortuner Legender", year: 2023, city: "Delhi", price: "Rs 56.9 L", status: "Live" },
-        { model: "Toyota Land Cruiser LC200 Sahara", year: 2016, city: "Mumbai", price: "Rs 1.09 Cr", status: "Archive" }
+        { model: "Sony WH-1000XM6", year: "Headphones", city: "Sony", price: "$449", status: "In stock", tagline: "Flagship wireless ANC for bass-rich commuting.", rating: "4.8", finish: "Midnight black", spec_label: "Battery", spec_value: "30h", score_label: "Bass-friendly pick", footer: "Sony audio", notes: ["QN3 noise-cancelling processor", "12-mic voice pickup", "Punchy low-end tuning"], icon: "🎧", accent: "#dcecff" },
+        { model: "Bose QuietComfort Ultra", year: "Headphones", city: "Bose", price: "$429", status: "In stock", tagline: "Smooth immersive audio with a relaxed luxury fit.", rating: "4.7", finish: "White smoke", spec_label: "Battery", spec_value: "24h", score_label: "Travel favorite", footer: "Bose audio", notes: ["Immersive spatial mode", "Soft plush clamp", "Clean bass response"], icon: "🎧", accent: "#f2ecff" },
+        { model: "Apple AirPods Max", year: "Headphones", city: "Apple", price: "$549", status: "Low stock", tagline: "Apple ecosystem flagship with dense build quality.", rating: "4.6", finish: "Starlight", spec_label: "Battery", spec_value: "20h", score_label: "Luxury pick", footer: "Apple audio", notes: ["Personalized Spatial Audio", "Excellent transparency", "Premium aluminum build"], icon: "🎧", accent: "#eef2f6" },
+        { model: "Samsung Galaxy Buds3 Pro", year: "Earbuds", city: "Samsung", price: "$249", status: "In stock", tagline: "Compact ANC buds with lively tuning for daily use.", rating: "4.4", finish: "Silver", spec_label: "Battery", spec_value: "7h + case", score_label: "Daily carry", footer: "Samsung audio", notes: ["Adaptive noise control", "Blade lights design", "Strong app EQ options"], icon: "🎵", accent: "#e7efff" },
+        { model: "Sennheiser Momentum 4", year: "Headphones", city: "Sennheiser", price: "$349", status: "In stock", tagline: "Long battery life and broad, customizable sound.", rating: "4.8", finish: "Graphite", spec_label: "Battery", spec_value: "60h", score_label: "Long-haul champ", footer: "Sennheiser audio", notes: ["60-hour battery", "Adaptive ANC", "Sound personalization"], icon: "🎧", accent: "#f0ede7" },
+        { model: "Beats Studio Pro", year: "Headphones", city: "Beats", price: "$349", status: "In stock", tagline: "Portable over-ears with lively low-end and USB-C audio.", rating: "4.3", finish: "Navy", spec_label: "Battery", spec_value: "40h", score_label: "Workout-ready", footer: "Beats audio", notes: ["Lossless USB-C audio", "Works well across Apple and Android", "Energetic bass profile"], icon: "🎧", accent: "#e9ebff" },
+        { model: "Nothing Ear", year: "Earbuds", city: "Nothing", price: "$149", status: "In stock", tagline: "Tunable earbuds with a sharp transparent design.", rating: "4.2", finish: "Transparent", spec_label: "Battery", spec_value: "8.5h + case", score_label: "Value buds", footer: "Nothing audio", notes: ["Advanced EQ controls", "Compact stem design", "Clean sub-bass lift"], icon: "🎶", accent: "#f5f5f5" },
+        { model: "Jabra Elite 10 Gen 2", year: "Earbuds", city: "Jabra", price: "$279", status: "In stock", tagline: "Comfort-first flagship buds made for long sessions.", rating: "4.5", finish: "Cocoa", spec_label: "Battery", spec_value: "6h + case", score_label: "Office-friendly", footer: "Jabra audio", notes: ["Dolby spatial sound", "ComfortFit oval tips", "Balanced warm bass"], icon: "🎵", accent: "#f2ebe5" },
+        { model: "Bowers & Wilkins Px7 S3", year: "Headphones", city: "Bowers & Wilkins", price: "$499", status: "Preorder", tagline: "Luxury wireless headphones with refined tuning.", rating: "4.7", finish: "Forest green", spec_label: "Battery", spec_value: "30h", score_label: "Luxury audio", footer: "B&W audio", notes: ["Premium materials", "Detailed mids with rich bass", "Travel-ready fold-flat build"], icon: "🎧", accent: "#edf5ea" },
+        { model: "Soundcore Liberty 4 Pro", year: "Earbuds", city: "Soundcore", price: "$199", status: "In stock", tagline: "Value-focused earbuds with app-heavy sound shaping.", rating: "4.3", finish: "Sky blue", spec_label: "Battery", spec_value: "10h + case", score_label: "Budget favorite", footer: "Soundcore audio", notes: ["HearID tuning", "Punchy bass presets", "Great price-to-feature ratio"], icon: "🎶", accent: "#e9f8ff" },
+        { model: "Dell XPS 14", year: "Laptops", city: "Dell", price: "$1799", status: "In stock", tagline: "Premium Windows laptop with sharp OLED and strong build quality.", rating: "4.6", finish: "Platinum", spec_label: "Display", spec_value: "14.5\" OLED", score_label: "Creator laptop", footer: "Dell computing", notes: ["Intel Core Ultra platform", "Minimal-bezel design", "High-end productivity pick"], icon: "💻", accent: "#eef1f5" },
+        { model: "Lenovo Yoga Pro 9i", year: "Laptops", city: "Lenovo", price: "$1699", status: "In stock", tagline: "Powerful creator notebook with punchy speakers and bright display.", rating: "4.5", finish: "Tidal teal", spec_label: "Display", spec_value: "16\" 3.2K", score_label: "Performance pick", footer: "Lenovo computing", notes: ["Discrete GPU options", "Large touchscreen canvas", "Great all-round creator machine"], icon: "💻", accent: "#e8f5f1" },
+        { model: "LG UltraGear 32GS95UE", year: "Monitors", city: "LG", price: "$1299", status: "In stock", tagline: "OLED gaming display built for deep contrast and high refresh.", rating: "4.7", finish: "Graphite", spec_label: "Refresh", spec_value: "240Hz", score_label: "Gaming display", footer: "LG display", notes: ["Dual-mode OLED panel", "Deep blacks and fast response", "Premium gaming monitor"], icon: "🖥️", accent: "#f2eefc" },
+        { model: "Asus ProArt PA32UCXR", year: "Monitors", city: "Asus", price: "$1599", status: "Preorder", tagline: "Color-accurate mini-LED display for editing and grading work.", rating: "4.6", finish: "Black", spec_label: "Panel", spec_value: "32\" 4K", score_label: "Studio display", footer: "Asus display", notes: ["Mini-LED backlight", "Factory-calibrated color", "Thunderbolt-ready workflow"], icon: "🖥️", accent: "#f9efe4" },
+        { model: "Logitech MX Mechanical", year: "Keyboards", city: "Logitech", price: "$179", status: "In stock", tagline: "Low-profile mechanical keyboard tuned for office comfort.", rating: "4.4", finish: "Graphite", spec_label: "Switches", spec_value: "Tactile quiet", score_label: "Desk upgrade", footer: "Logitech peripherals", notes: ["Multi-device switching", "USB-C charging", "Refined productivity typing"], icon: "⌨️", accent: "#edf2f5" },
+        { model: "Razer Blade 16", year: "Laptops", city: "Razer", price: "$2999", status: "Low stock", tagline: "High-end gaming laptop with desktop-class performance ambitions.", rating: "4.7", finish: "Black", spec_label: "GPU", spec_value: "RTX class", score_label: "Gaming laptop", footer: "Razer computing", notes: ["Premium CNC chassis", "Fast high-refresh panel", "Performance-focused thermal design"], icon: "💻", accent: "#eef8ea" },
+        { model: "Microsoft Surface Pro 11", year: "Tablets", city: "Microsoft", price: "$999", status: "In stock", tagline: "Thin detachable for portable work, notes, and light editing.", rating: "4.4", finish: "Platinum", spec_label: "Screen", spec_value: "13\" PixelSense", score_label: "Hybrid tablet", footer: "Microsoft mobile", notes: ["Tablet-laptop flexibility", "Long battery claims", "Pen-friendly workflow"], icon: "📱", accent: "#edf4fb" },
+        { model: "Anker Prime 27K Power Bank", year: "Accessories", city: "Anker", price: "$179", status: "In stock", tagline: "Large travel battery for laptops, tablets, and multi-device charging.", rating: "4.5", finish: "Space gray", spec_label: "Capacity", spec_value: "27,650mAh", score_label: "Travel accessory", footer: "Anker charging", notes: ["High-watt USB-C output", "Air-travel-friendly size", "Great for mobile work kits"], icon: "🔋", accent: "#eef8f4" },
+        { model: "Sony Inzone M10S", year: "Monitors", city: "Sony", price: "$1099", status: "In stock", tagline: "Tournament-focused OLED gaming monitor with fast response.", rating: "4.5", finish: "Black", spec_label: "Refresh", spec_value: "480Hz", score_label: "Esports display", footer: "Sony gaming", notes: ["OLED motion clarity", "Compact competition size", "Low-latency gaming focus"], icon: "🖥️", accent: "#e7f0ff" },
+        { model: "Bose SoundLink Max", year: "Speakers", city: "Bose", price: "$399", status: "In stock", tagline: "Portable speaker with bold output and premium carry design.", rating: "4.4", finish: "Blue dusk", spec_label: "Battery", spec_value: "20h", score_label: "Party speaker", footer: "Bose portable", notes: ["Large-scale room sound", "Carry handle design", "Balanced bass punch"], icon: "🔊", accent: "#eef1ff" },
+        { model: "Apple MacBook Air 15", year: "Laptops", city: "Apple", price: "$1299", status: "In stock", tagline: "Thin productivity notebook with quiet thermals and long battery.", rating: "4.7", finish: "Midnight", spec_label: "Display", spec_value: "15.3in Liquid Retina", score_label: "Everyday laptop", footer: "Apple computing", notes: ["Fanless design", "Excellent battery life", "Strong app ecosystem"], icon: "💻", accent: "#edf1f7" },
+        { model: "Samsung ViewFinity S9", year: "Monitors", city: "Samsung", price: "$1399", status: "In stock", tagline: "5K monitor tailored for clean desktop setups and creators.", rating: "4.3", finish: "Silver", spec_label: "Panel", spec_value: "27in 5K", score_label: "Desk centerpiece", footer: "Samsung display", notes: ["High-resolution workspace", "Minimal industrial design", "Great for macOS or Windows desks"], icon: "🖥️", accent: "#eef5ff" },
+        { model: "Sennheiser Accentum Plus", year: "Headphones", city: "Sennheiser", price: "$229", status: "In stock", tagline: "Midrange ANC headphones with a warm, easy-going signature.", rating: "4.3", finish: "White", spec_label: "Battery", spec_value: "50h", score_label: "Value ANC", footer: "Sennheiser audio", notes: ["Long battery life", "Gesture touch controls", "Relaxed low-end tuning"], icon: "🎧", accent: "#f6f2ea" },
+        { model: "Beats Pill", year: "Speakers", city: "Beats", price: "$149", status: "In stock", tagline: "Compact speaker with energetic bass and casual outdoor appeal.", rating: "4.1", finish: "Champagne gold", spec_label: "Battery", spec_value: "24h", score_label: "Casual speaker", footer: "Beats portable", notes: ["Portable cylindrical shape", "Simple physical controls", "Strong low-end for size"], icon: "🔊", accent: "#f2edff" },
+        { model: "Nothing Phone 3a Pro", year: "Phones", city: "Nothing", price: "$499", status: "Preorder", tagline: "Midrange phone with standout industrial design and balanced performance.", rating: "4.2", finish: "Transparent gray", spec_label: "Screen", spec_value: "6.7in OLED", score_label: "Design phone", footer: "Nothing mobile", notes: ["Distinctive glyph styling", "Clean Android feel", "Good daily camera setup"], icon: "📱", accent: "#f6f6f6" },
+        { model: "Jabra Speak2 75", year: "Accessories", city: "Jabra", price: "$329", status: "In stock", tagline: "Premium conference speaker for portable hybrid work setups.", rating: "4.4", finish: "Dark gray", spec_label: "Mics", spec_value: "4 beamforming", score_label: "Hybrid office", footer: "Jabra meetings", notes: ["Teams and Zoom ready", "Strong voice pickup", "Portable meeting-room audio"], icon: "🎙️", accent: "#f3ece7" },
+        { model: "Bowers & Wilkins Zeppelin Pro", year: "Speakers", city: "Bowers & Wilkins", price: "$799", status: "Low stock", tagline: "Statement wireless speaker designed for lounge-room listening.", rating: "4.5", finish: "Pearl gray", spec_label: "Drivers", spec_value: "5-driver array", score_label: "Statement speaker", footer: "B&W home audio", notes: ["Large-room presentation", "Elegant silhouette", "Rich low-end"], icon: "🔊", accent: "#eef5ef" },
+        { model: "Soundcore Space One Pro", year: "Headphones", city: "Soundcore", price: "$199", status: "In stock", tagline: "Affordable ANC headphones with crowd-pleasing tuning.", rating: "4.2", finish: "Latte cream", spec_label: "Battery", spec_value: "40h", score_label: "Budget over-ear", footer: "Soundcore audio", notes: ["Adaptive ANC", "Comfortable fit", "Bass-forward presets"], icon: "🎧", accent: "#eff8ff" },
+        { model: "Dell UltraSharp U4025QW", year: "Monitors", city: "Dell", price: "$1899", status: "In stock", tagline: "Ultrawide productivity monitor for multi-window workflows.", rating: "4.7", finish: "Silver", spec_label: "Panel", spec_value: "40in 5K2K", score_label: "Ultrawide desk", footer: "Dell display", notes: ["Huge canvas for multitasking", "USB-C hub built in", "Excellent office monitor"], icon: "🖥️", accent: "#edf2f7" },
+        { model: "Lenovo Legion 7i", year: "Laptops", city: "Lenovo", price: "$2399", status: "Low stock", tagline: "High-power gaming notebook with strong thermals and bright panel.", rating: "4.6", finish: "Storm gray", spec_label: "Display", spec_value: "16in 240Hz", score_label: "Gaming workstation", footer: "Lenovo gaming", notes: ["High-end GPU options", "Sturdy chassis", "Fast display for creators and gamers"], icon: "💻", accent: "#ecf6f2" },
+        { model: "LG Gram Pro 16", year: "Laptops", city: "LG", price: "$1799", status: "In stock", tagline: "Very light large-screen laptop with premium portability.", rating: "4.3", finish: "Obsidian black", spec_label: "Weight", spec_value: "Under 1.3kg", score_label: "Travel laptop", footer: "LG computing", notes: ["Large screen in a light shell", "Portable creator option", "Clean minimalist styling"], icon: "💻", accent: "#f4effd" },
+        { model: "Asus ROG Ally X", year: "Handhelds", city: "Asus", price: "$799", status: "In stock", tagline: "Windows gaming handheld for couch and travel play.", rating: "4.4", finish: "Black", spec_label: "Battery", spec_value: "80Wh", score_label: "Gaming handheld", footer: "Asus gaming", notes: ["Portable PC gaming", "High-memory spec", "Dock-and-play flexibility"], icon: "🎮", accent: "#faf1e8" },
+        { model: "Logitech G Pro X TKL", year: "Keyboards", city: "Logitech", price: "$199", status: "In stock", tagline: "Tournament-style tenkeyless board tuned for fast inputs.", rating: "4.3", finish: "Black", spec_label: "Layout", spec_value: "TKL wireless", score_label: "Esports keyboard", footer: "Logitech gaming", notes: ["Compact format", "Fast wireless connection", "Swappable competitive profile"], icon: "⌨️", accent: "#edf2f5" },
+        { model: "Razer BlackShark V2 Pro", year: "Headsets", city: "Razer", price: "$199", status: "In stock", tagline: "Wireless gaming headset focused on directional clarity.", rating: "4.4", finish: "Black", spec_label: "Battery", spec_value: "70h", score_label: "Gaming headset", footer: "Razer audio", notes: ["Clear esports mic", "Comfortable lightweight shell", "Strong spatial cues"], icon: "🎧", accent: "#eef8ea" },
+        { model: "Microsoft Designer Compact Keyboard", year: "Keyboards", city: "Microsoft", price: "$69", status: "In stock", tagline: "Minimal compact keyboard for portable office setups.", rating: "4.0", finish: "Glacier", spec_label: "Layout", spec_value: "Compact", score_label: "Portable typing", footer: "Microsoft accessories", notes: ["Slim travel-ready profile", "Quiet typing feel", "Pairs with tablets easily"], icon: "⌨️", accent: "#eef5fb" },
+        { model: "Anker 747 Charger", year: "Accessories", city: "Anker", price: "$99", status: "In stock", tagline: "Desktop GaN charger for powering laptops and travel kits.", rating: "4.6", finish: "Black", spec_label: "Output", spec_value: "150W", score_label: "Desk charging", footer: "Anker charging", notes: ["Multiple USB-C ports", "GaN compact brick", "Great for multi-device setups"], icon: "🔌", accent: "#eff9f3" },
+        { model: "Sony Xperia 1 VI", year: "Phones", city: "Sony", price: "$1399", status: "Preorder", tagline: "Creator-focused Android phone with long zoom range.", rating: "4.3", finish: "Khaki green", spec_label: "Screen", spec_value: "6.5in OLED", score_label: "Creator phone", footer: "Sony mobile", notes: ["Manual camera controls", "Slim flagship shape", "Front-facing stereo speakers"], icon: "📱", accent: "#e7f1ff" },
+        { model: "Bose Smart Ultra Soundbar", year: "Speakers", city: "Bose", price: "$899", status: "In stock", tagline: "Living-room soundbar with immersive processing and clean vocals.", rating: "4.4", finish: "Arctic white", spec_label: "Channels", spec_value: "Spatial audio", score_label: "Living-room sound", footer: "Bose home audio", notes: ["Dialogue lift tuning", "Sleek white finish", "Premium TV upgrade"], icon: "🔊", accent: "#f2ecff" },
+        { model: "Apple Studio Display", year: "Monitors", city: "Apple", price: "$1599", status: "In stock", tagline: "Refined 5K display built for polished desktop setups.", rating: "4.6", finish: "Silver", spec_label: "Panel", spec_value: "27in 5K", score_label: "Mac display", footer: "Apple display", notes: ["Great text clarity", "Integrated webcam and speakers", "Premium aluminum stand"], icon: "🖥️", accent: "#edf2f8" },
+        { model: "Samsung Galaxy Book4 Ultra", year: "Laptops", city: "Samsung", price: "$2299", status: "In stock", tagline: "Thin creator laptop with premium AMOLED display.", rating: "4.5", finish: "Moonstone gray", spec_label: "Display", spec_value: "16in AMOLED", score_label: "AMOLED laptop", footer: "Samsung computing", notes: ["Slim premium body", "Sharp color-rich screen", "Strong ecosystem tie-ins"], icon: "💻", accent: "#eaf1ff" },
+        { model: "Sennheiser AMBEO Mini", year: "Speakers", city: "Sennheiser", price: "$799", status: "Low stock", tagline: "Compact soundbar aimed at smaller rooms and cleaner TV setups.", rating: "4.3", finish: "Anthracite", spec_label: "Format", spec_value: "Compact bar", score_label: "Compact theater", footer: "Sennheiser home audio", notes: ["Virtual surround processing", "Small-room friendly", "Detailed dialogue"], icon: "🔊", accent: "#f4efe8" },
+        { model: "Beats Solo 4", year: "Headphones", city: "Beats", price: "$199", status: "In stock", tagline: "Portable on-ear pair with long battery and easy pairing.", rating: "4.1", finish: "Cloud pink", spec_label: "Battery", spec_value: "50h", score_label: "Portable on-ear", footer: "Beats portable", notes: ["Folds for commuting", "Long battery life", "Punchy casual tuning"], icon: "🎧", accent: "#f0eaff" },
+        { model: "Nothing CMF Buds Pro 2", year: "Earbuds", city: "Nothing", price: "$79", status: "In stock", tagline: "Affordable buds with bold color options and bass emphasis.", rating: "4.0", finish: "Orange", spec_label: "Battery", spec_value: "11h + case", score_label: "Budget buds", footer: "CMF audio", notes: ["Low-cost entry point", "Strong bass for price", "Fun industrial design"], icon: "🎶", accent: "#fff1e5" },
+        { model: "Jabra PanaCast 20", year: "Accessories", city: "Jabra", price: "$249", status: "In stock", tagline: "Portable 4K webcam for desk setups and travel meetings.", rating: "4.2", finish: "Black", spec_label: "Video", spec_value: "4K", score_label: "Desk webcam", footer: "Jabra video", notes: ["Privacy shutter", "Auto light correction", "Compact portable body"], icon: "📷", accent: "#f3ece7" },
+        { model: "Bowers & Wilkins Pi8", year: "Earbuds", city: "Bowers & Wilkins", price: "$399", status: "Preorder", tagline: "Luxury earbuds with upscale finish and rich sound profile.", rating: "4.4", finish: "Jade green", spec_label: "Battery", spec_value: "6.5h + case", score_label: "Luxury buds", footer: "B&W audio", notes: ["Premium finish materials", "Detailed hi-fi leaning sound", "Compact luxury travel case"], icon: "🎵", accent: "#edf5ea" },
+        { model: "Soundcore Motion X600", year: "Speakers", city: "Soundcore", price: "$199", status: "In stock", tagline: "Portable speaker tuned for bigger room-filling stereo.", rating: "4.2", finish: "Polar gray", spec_label: "Battery", spec_value: "12h", score_label: "Portable stereo", footer: "Soundcore portable", notes: ["Spatial audio mode", "Carry handle form", "Balanced value-oriented speaker"], icon: "🔊", accent: "#ecf9ff" },
+        { model: "Dell Latitude 9450", year: "Laptops", city: "Dell", price: "$2499", status: "In stock", tagline: "Enterprise-grade premium notebook with polished fit and finish.", rating: "4.4", finish: "Titan gray", spec_label: "Display", spec_value: "14in QHD+", score_label: "Business flagship", footer: "Dell business", notes: ["Executive build quality", "Enterprise manageability", "Premium collaboration features"], icon: "💻", accent: "#eef2f6" },
+        { model: "Lenovo ThinkVision P32pz", year: "Monitors", city: "Lenovo", price: "$1599", status: "Low stock", tagline: "Mini-LED professional display for HDR editing workflows.", rating: "4.5", finish: "Black", spec_label: "Panel", spec_value: "31.5in 4K", score_label: "HDR monitor", footer: "Lenovo display", notes: ["Mini-LED zone dimming", "Creator-friendly connectivity", "High dynamic range focus"], icon: "🖥️", accent: "#eaf6f1" },
+        { model: "LG StanbyME Go", year: "Displays", city: "LG", price: "$999", status: "Preorder", tagline: "Portable suitcase-style display built for flexible rooms.", rating: "4.1", finish: "Beige", spec_label: "Screen", spec_value: "27in touch", score_label: "Lifestyle display", footer: "LG lifestyle", notes: ["Portable built-in battery", "Touchscreen flexibility", "Conversation-starting design"], icon: "📺", accent: "#f5effd" },
+        { model: "Asus Zenbook Duo", year: "Laptops", city: "Asus", price: "$1699", status: "In stock", tagline: "Dual-screen notebook for multitasking and creative workflows.", rating: "4.5", finish: "Ink black", spec_label: "Display", spec_value: "Dual 14in", score_label: "Dual-screen laptop", footer: "Asus computing", notes: ["Two OLED panels", "Flexible productivity modes", "Portable creative workstation"], icon: "💻", accent: "#faefe6" },
+        { model: "Logitech Casa Pop-Up Desk", year: "Accessories", city: "Logitech", price: "$179", status: "In stock", tagline: "Portable hybrid-work kit with stand, keyboard, and touchpad.", rating: "4.1", finish: "Classic chic", spec_label: "Format", spec_value: "Desk kit", score_label: "Hybrid work kit", footer: "Logitech mobile", notes: ["All-in-one travel desk", "Portable setup upgrade", "Good for remote work routines"], icon: "🧳", accent: "#edf2f5" },
+        { model: "Razer Nommo V2", year: "Speakers", city: "Razer", price: "$299", status: "In stock", tagline: "Desktop speaker set for games and immersive room sound.", rating: "4.3", finish: "Black", spec_label: "Channels", spec_value: "2.1", score_label: "Gaming speakers", footer: "Razer desktop audio", notes: ["RGB-ready design", "Strong desktop bass", "Great for battlestation setups"], icon: "🔊", accent: "#eef8ea" },
+        { model: "Microsoft Surface Laptop Studio 2", year: "Laptops", city: "Microsoft", price: "$2399", status: "Low stock", tagline: "Flexible creator laptop that folds toward sketch and edit modes.", rating: "4.4", finish: "Platinum", spec_label: "Display", spec_value: "14.4in touch", score_label: "Creative hybrid", footer: "Microsoft computing", notes: ["Pull-forward display hinge", "Pen-ready creative design", "Strong productivity versatility"], icon: "💻", accent: "#edf4fb" },
+        { model: "AnkerMake M5C", year: "Accessories", city: "Anker", price: "$399", status: "In stock", tagline: "Beginner-friendly 3D printer for maker desks and hobby projects.", rating: "4.1", finish: "Gray", spec_label: "Build", spec_value: "220mm cube", score_label: "Maker gear", footer: "AnkerMake", notes: ["App-guided setup", "Fast print claims", "Good starter desktop fabrication"], icon: "🧩", accent: "#eef8f4" }
       ];
-      var premiumOnly = false;
-      var currentTab = "inventory";
+      var currentTab = "catalog";
+      var renderedRows = [];
 
       var inventoryBody = document.getElementById("inventory-body");
       var searchInput = document.getElementById("inventory-search");
       var locationFilter = document.getElementById("location-filter");
       var visibleStockCount = document.getElementById("visible-stock-count");
       var currentTabLabel = document.getElementById("current-tab-label");
-      var premiumPill = document.getElementById("premium-filter-pill");
       var lastRefreshPill = document.getElementById("last-refresh-pill");
       var inventoryStatusPill = document.getElementById("inventory-status-pill");
       var activityFeed = document.getElementById("activity-feed");
@@ -466,107 +665,161 @@
         }
       }
 
+      function shuffleRows(rows) {
+        var copy = rows.slice();
+        for (var i = copy.length - 1; i > 0; i -= 1) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var temp = copy[i];
+          copy[i] = copy[j];
+          copy[j] = temp;
+        }
+        return copy;
+      }
+
       function filteredRows() {
         var term = String(searchInput.value || "").toLowerCase();
         var city = String(locationFilter.value || "all");
         return inventoryRows.filter(function (row) {
           var matchesTerm = !term || JSON.stringify(row).toLowerCase().indexOf(term) >= 0;
           var matchesCity = city === "all" || row.city === city;
-          var matchesPremium = !premiumOnly || row.price.indexOf("Cr") >= 0;
-          return matchesTerm && matchesCity && matchesPremium;
+          return matchesTerm && matchesCity;
         });
       }
 
       function renderInventory() {
-        var rows = filteredRows();
+        var rows = shuffleRows(filteredRows());
+        renderedRows = rows.slice();
         inventoryBody.innerHTML = rows.map(function (row) {
+          var stockClass = row.status === "In stock" ? "good" : (row.status === "Low stock" || row.status === "Preorder" ? "warn" : "");
           return [
-            "<tr>",
-            "<td><strong>", row.model, "</strong></td>",
-            "<td>", String(row.year), "</td>",
-            "<td>", row.city, "</td>",
-            "<td>", row.price, "</td>",
-            "<td>", row.status, "</td>",
-            "</tr>"
+            "<article class=\"product-card\" data-brand=\"", row.city, "\" data-category=\"", row.year, "\">",
+            "<div class=\"product-media\" style=\"background: linear-gradient(135deg, ", row.accent || "#eef4f7", ", rgba(255,255,255,0.78));\">",
+            "<span class=\"product-icon\">", row.icon || "🎧", "</span>",
+            "<div class=\"product-score\">", row.score_label || "Popular pick", "<strong>", row.rating || "4.5", "/5</strong></div>",
+            "</div>",
+            "<div class=\"product-topline\">",
+            "<div>",
+            "<h3>", row.model, "</h3>",
+            "<div class=\"product-brand\">", row.city, " • ", String(row.year), "</div>",
+            "</div>",
+            "<div class=\"product-price\">", row.price, "</div>",
+            "</div>",
+            "<div class=\"product-meta\">",
+            "<span class=\"meta-pill ", stockClass, "\">", row.status, "</span>",
+            "<span class=\"meta-pill\">", row.spec_label || "Spec", " ", row.spec_value || "-", "</span>",
+            "<span class=\"meta-pill\">", row.finish || "Core finish", "</span>",
+            "</div>",
+            "<p class=\"product-copy\">", row.tagline || "", "</p>",
+            "<ul class=\"feature-list\">",
+            (row.notes || []).map(function (note) { return "<li>" + note + "</li>"; }).join(""),
+            "</ul>",
+            "<div class=\"product-footer\">",
+            "<span>Compare-ready demo product</span>",
+            "<span>", row.footer || (row.city + " featured"), "</span>",
+            "</div>",
+            "</article>"
           ].join("");
-        }).join("") || "<tr><td colspan=\"5\">No rows match the current filters.</td></tr>";
+        }).join("") || "<div class=\"empty-state\">No products match the current filters.</div>";
         visibleStockCount.textContent = String(rows.length);
       }
 
-      function setTab(tabName) {
-        currentTab = tabName;
-        currentTabLabel.textContent = tabName.charAt(0).toUpperCase() + tabName.slice(1);
-        Array.prototype.forEach.call(document.querySelectorAll(".tab-btn"), function (btn) {
-          btn.classList.toggle("active", btn.getAttribute("data-tab") === tabName);
-        });
-        Array.prototype.forEach.call(document.querySelectorAll(".tab-panel"), function (panel) {
-          panel.classList.toggle("active", panel.getAttribute("data-panel") === tabName);
-        });
-        logActivity("Switched to " + tabName + " tab");
+      function serializeProductRow(row) {
+        return {
+          name: row.model,
+          category: row.year,
+          brand: row.city,
+          price: row.price,
+          stock: row.status,
+          rating: row.rating,
+          finish: row.finish,
+          summary: row.tagline,
+          key_spec: (row.spec_label || "Spec") + " " + (row.spec_value || "-"),
+          notes: Array.isArray(row.notes) ? row.notes.slice(0, 3) : []
+        };
+      }
+
+      function currentVisibleProducts(limit) {
+        var max = Math.max(1, Math.min(Number(limit) || renderedRows.length || 12, renderedRows.length || 12));
+        return renderedRows.slice(0, max).map(serializeProductRow);
+      }
+
+      function currentPageState() {
+        return {
+          ok: true,
+          title: document.title,
+          path: window.location.pathname,
+          url: window.location.href,
+          current_tab: currentTab,
+          search_term: String(searchInput.value || ""),
+          active_brand_filter: String(locationFilter.value || "all"),
+          visible_product_count: renderedRows.length,
+          visible_brands: Array.from(new Set(renderedRows.map(function (row) { return row.city; }))).slice(0, 12),
+          visible_categories: Array.from(new Set(renderedRows.map(function (row) { return row.year; }))).slice(0, 12),
+          buying_guide_open: modal.classList.contains("open"),
+          workspace_target: "#agent-workspace"
+        };
       }
 
       function openModal() {
         modal.classList.add("open");
         modal.setAttribute("aria-hidden", "false");
-        logActivity("Opened maintenance modal");
+        logActivity("Opened buying guide modal");
       }
 
       function closeModal(reason) {
         modal.classList.remove("open");
         modal.setAttribute("aria-hidden", "true");
-        logActivity(reason || "Closed maintenance modal");
+        logActivity(reason || "Closed buying guide modal");
       }
-
-      document.getElementById("fill-lc200-btn").addEventListener("click", function () {
-        searchInput.value = "LC200";
-        searchInput.dispatchEvent(new Event("input", { bubbles: true }));
-        renderInventory();
-        logActivity("Filled the search box with LC200");
-      });
 
       document.getElementById("refresh-inventory-btn").addEventListener("click", function () {
         lastRefreshPill.textContent = "Last refresh: " + new Date().toLocaleTimeString();
-        inventoryStatusPill.textContent = "Inventory API refreshed";
+        inventoryStatusPill.textContent = "Catalog API refreshed";
         renderInventory();
-        logActivity("Refreshed inventory data");
+        logActivity("Refreshed catalog data");
       });
 
       document.getElementById("open-maintenance-btn").addEventListener("click", openModal);
-      document.getElementById("close-maintenance-btn").addEventListener("click", function () { closeModal("Closed maintenance modal"); });
-      document.getElementById("confirm-maintenance-btn").addEventListener("click", function () { closeModal("Confirmed maintenance window"); });
-      document.getElementById("toggle-premium-btn").addEventListener("click", function () {
-        premiumOnly = !premiumOnly;
-        premiumPill.textContent = premiumOnly ? "Premium filter on" : "Premium filter off";
-        renderInventory();
-        logActivity("Premium filter " + (premiumOnly ? "enabled" : "disabled"));
-      });
+      document.getElementById("close-maintenance-btn").addEventListener("click", function () { closeModal("Closed buying guide modal"); });
+      document.getElementById("confirm-maintenance-btn").addEventListener("click", function () { closeModal("Marked buying guide as reviewed"); });
       document.getElementById("apply-filters-btn").addEventListener("click", function () {
         renderInventory();
-        logActivity("Applied filters to inventory");
+        logActivity("Applied catalog filters");
       });
       searchInput.addEventListener("input", renderInventory);
       locationFilter.addEventListener("change", renderInventory);
       modal.addEventListener("click", function (event) {
         if (event.target === modal) closeModal("Dismissed maintenance modal");
       });
-      Array.prototype.forEach.call(document.querySelectorAll(".tab-btn"), function (btn) {
-        btn.addEventListener("click", function () {
-          setTab(btn.getAttribute("data-tab"));
-        });
-      });
 
+      document.getElementById("open-ticket-count").textContent = String(Array.from(new Set(inventoryRows.map(function (row) { return row.city; }))).length);
       renderInventory();
-      logActivity("Demo host loaded");
+      logActivity("Commerce demo host loaded");
 
       window.ExampleAgentBridge = {
         getContext: function () {
+          var visibleProducts = currentVisibleProducts(8);
           return {
             title: document.title,
             path: window.location.pathname,
             url: window.location.href,
             current_tab: currentTab,
-            premium_filter: premiumOnly ? "on" : "off",
+            active_brand_filter: String(locationFilter.value || "all"),
+            search_term: String(searchInput.value || ""),
+            visible_products: visibleProducts,
             workspace_target: "#agent-workspace"
+          };
+        },
+        getPageState: function () {
+          return currentPageState();
+        },
+        getVisibleProducts: function (limit) {
+          return {
+            ok: true,
+            count: renderedRows.length,
+            items: currentVisibleProducts(limit),
+            path: window.location.pathname,
+            url: window.location.href
           };
         },
         getVisibleTextSample: function () {
@@ -593,12 +846,12 @@
         bridge: window.ExampleAgentBridge,
         workspaceTarget: "#agent-workspace",
         defaultBackend: "codex",
-        localBridgeDiscoveryUrls: ["http://127.0.0.1:8791"],
+        localBridgeDiscoveryUrls: ["http://127.0.0.1:8787"],
         hostContext: {
-          host_name: "Dealer Ops Demo Host",
+          host_name: "Northstar Commerce Demo",
           host_reference_mode: "Same-origin agent-doc files are auto-attached inline for the agent.",
           preferred_workspace_target: "#agent-workspace",
-          notable_selectors: "#inventory-search, #refresh-inventory-btn, #open-maintenance-btn, #fill-lc200-btn, #toggle-premium-btn",
+          notable_selectors: "#inventory-search, #location-filter, #apply-filters-btn, #refresh-inventory-btn, #open-maintenance-btn, #inventory-body",
           api_class_file: "/examples/basic/agent-docs/api-client.js"
         }
       });

@@ -11,7 +11,7 @@ Use it when you want:
 WebAgent has two parts:
 
 - [`widget/`](./widget): the browser widget a website embeds
-- [`server/`](./server): the local bridge and desktop companion the end user runs
+- [`server/`](./server): the local bridge and optional desktop companion/runtime helpers the end user runs
 
 That lets websites expose safe page-specific actions while users keep the agent runtime on their own machine.
 
@@ -82,11 +82,18 @@ python3 -m pip install .
 local-agent-bridge
 ```
 
-Optional desktop companion:
+Optional Python desktop companion after `pip install .`:
 
 ```bash
 local-agent-bridge-app
 ```
+
+Notes:
+
+- on macOS and Linux, `local-agent-bridge` is the required local service
+- `local-agent-bridge-app` is only a convenience UI layer
+- it is not a polished packaged native app on macOS/Linux yet
+- it runs from the installed Python package and may require a Python build that includes `tkinter`
 
 Default local address:
 

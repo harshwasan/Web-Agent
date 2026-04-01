@@ -81,7 +81,7 @@ Run the local bridge:
 local-agent-bridge
 ```
 
-Run the desktop companion:
+Optional Python desktop companion after install:
 
 ```bash
 local-agent-bridge-app
@@ -97,11 +97,16 @@ Management page:
 
 - `http://127.0.0.1:8787/bridge/sites`
 
-If `local-agent-bridge-app` fails with a Tk error, install or use a Python distribution that includes `tkinter`.
+Notes:
+
+- `local-agent-bridge` is the required local service
+- `local-agent-bridge-app` is only a convenience GUI for start/stop/status/logs
+- on macOS today it runs from the installed Python package, not from a packaged native `.app`
+- if `local-agent-bridge-app` fails with a Tk error, install or use a Python distribution that includes `tkinter`
 
 ### Linux
 
-Current Linux path supports both source-based install and a packaged setup bundle.
+Current Linux path supports both source-based install and a lightweight setup bundle, but not polished distro-native packaging yet.
 
 Install:
 
@@ -116,7 +121,7 @@ Run the local bridge:
 local-agent-bridge
 ```
 
-Run the desktop companion:
+Optional Python desktop companion after install:
 
 ```bash
 local-agent-bridge-app
@@ -128,7 +133,12 @@ Optional user-scoped protocol registration:
 local-agent-bridge-install
 ```
 
-Depending on distro, you may need Tk packages for the desktop companion.
+Notes:
+
+- `local-agent-bridge` is the required local service
+- `local-agent-bridge-app` is only a convenience GUI for start/stop/status/logs
+- on Linux today it usually runs from the installed Python package unless you build your own bundled setup
+- depending on distro, you may need Tk packages for the desktop companion
 
 Packaged Linux setup bundle:
 
@@ -156,13 +166,13 @@ tar -xzf WebAgentBridgeSetup.tar.gz
 local-agent-bridge
 ```
 
-Desktop companion app:
+Optional Python desktop companion:
 
 ```bash
 local-agent-bridge-app
 ```
 
-Run it in tray/background mode:
+Run the optional Python desktop companion in tray/background mode:
 
 ```bash
 local-agent-bridge-app --tray

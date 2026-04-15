@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "local-agent-bridge"
 version = "0.1.0"
-description = "Local companion bridge for the WebAgent widget"
+description = "Local bridge and desktop companion for the WebAgent widget"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

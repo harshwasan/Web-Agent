@@ -1,33 +1,38 @@
 # WebAgent
 
-Embeddable agent UI for websites, backed by a user-run local bridge for Codex and Claude.
+Embeddable website agent widget backed by a user-run local bridge for Codex and Claude.
 
-Use it when you want:
+WebAgent is designed for sites that want agent-assisted workflows without moving the full runtime into the browser. The site embeds a widget and exposes a small, safe bridge API. The end user runs a local bridge on their own machine. That keeps agent execution user-controlled while still allowing the site to provide structured page actions, approvals, and context.
 
-- a website widget that can show agent progress and ask for approvals
-- host-specific page actions exposed through simple JavaScript
-- end users to keep the actual agent runtime on their own machine
+## Why This Exists
 
-WebAgent has two parts:
+WebAgent is useful when you need:
 
-- [`widget/`](./widget): the browser widget a website embeds
-- [`server/`](./server): the local bridge and optional desktop companion/runtime helpers the end user runs
+- an embeddable agent UI that can stream progress and request approvals
+- host-specific page actions exposed through a small JavaScript bridge
+- local-first execution where the user controls the bridge runtime
+- a clean separation between site UI, site actions, and agent execution
 
-That lets websites expose safe page-specific actions while users keep the agent runtime on their own machine.
+## Architecture
 
-## How It Works
+WebAgent has two main parts:
 
-1. A website embeds the widget.
-2. The website provides a small JS bridge with page context and safe UI actions.
+- [`widget/`](./widget): the embeddable browser widget
+- [`server/`](./server): the local bridge and optional desktop companion
+
+High-level flow:
+
+1. A site embeds the widget.
+2. The site provides a small bridge object for page context and allowed actions.
 3. The widget connects to either:
    - the user's local bridge, or
-   - a site-provided backend via `apiBaseUrl`
-4. Codex or Claude runs through the backend.
-5. The widget shows progress, asks for approval when needed, and executes allowed page actions.
+   - a site-provided backend through `apiBaseUrl`
+4. Codex or Claude runs through the selected backend.
+5. The widget renders progress, approvals, and action results.
 
 ## Quick Start
 
-### For website owners
+### For site owners
 
 ```html
 <div id="agent-root"></div>
@@ -54,9 +59,9 @@ That lets websites expose safe page-specific actions while users keep the agent 
 </script>
 ```
 
-If you do not provide `apiBaseUrl`, the widget tries to auto-discover the user's local bridge.
+If `apiBaseUrl` is omitted, the widget attempts local bridge discovery.
 
-If you want to force your own backend:
+To force a site-hosted backend:
 
 ```js
 AgentWidget.init({
@@ -72,7 +77,7 @@ AgentWidget.init({
 Windows:
 
 - run [`server/dist/windows/WebAgentBridgeSetup.exe`](./server/dist/windows/WebAgentBridgeSetup.exe)
-- current Windows binaries in this repo are unsigned, so Windows SmartScreen / Smart App Control may warn or block them
+- current Windows binaries are unsigned, so SmartScreen or Smart App Control may warn or block them
 
 macOS / Linux:
 
@@ -82,77 +87,38 @@ python3 -m pip install .
 local-agent-bridge
 ```
 
-Optional Python desktop companion after `pip install .`:
+Optional desktop companion after `pip install .`:
 
 ```bash
 local-agent-bridge-app
 ```
 
-Notes:
-
-- on macOS and Linux, `local-agent-bridge` is the required local service
-- `local-agent-bridge-app` is only a convenience UI layer
-- it is not a polished packaged native app on macOS/Linux yet
-- it runs from the installed Python package and may require a Python build that includes `tkinter`
-
-Default local address:
+Default local bridge address:
 
 - `http://127.0.0.1:8787`
 
-Approval manager:
+Local approval manager:
 
 - `http://127.0.0.1:8787/bridge/sites`
 
-Direct packaged downloads are listed in [`docs/public/DOWNLOADS.md`](./docs/public/DOWNLOADS.md).
+## Security Model
 
-## Security
+The local bridge does not grant site access by default.
 
-The local bridge does not grant agent access to a website by default.
-
-When a site first tries to connect:
+When a site first attempts to connect:
 
 1. the bridge returns `approval_required`
 2. the widget opens the local approval flow
-3. the user allows or denies the site
+3. the user explicitly allows or denies the site
 4. the decision is stored locally on that machine
 
-That prevents random websites from silently gaining access to the user's local agent runtime.
+That prevents arbitrary sites from silently attaching to the user's local runtime.
 
 More detail:
 
 - [`docs/public/SECURITY.md`](./docs/public/SECURITY.md)
 
-## Downloads
-
-Current packaged artifacts in this repo:
-
-- Windows installer and app in [`server/dist/windows/`](./server/dist/windows)
-- Python wheel and source tarball in [`server/dist/`](./server/dist)
-- widget npm tarball in [`widget/`](./widget)
-
-Important:
-
-- current Windows binaries are unsigned
-- that can trigger Windows SmartScreen or Smart App Control warnings
-- signed Windows release builds are still pending
-
-Checksums:
-
-- [`server/dist/SHA256SUMS.txt`](./server/dist/SHA256SUMS.txt)
-- [`widget/SHA256SUMS.txt`](./widget/SHA256SUMS.txt)
-
-## Documentation
-
-- [`docs/public/QUICKSTART.md`](./docs/public/QUICKSTART.md)
-- [`docs/public/USAGE.md`](./docs/public/USAGE.md)
-- [`docs/public/DOWNLOADS.md`](./docs/public/DOWNLOADS.md)
-- [`docs/public/BRIDGE_CONTRACT.md`](./docs/public/BRIDGE_CONTRACT.md)
-- [`docs/public/ARCHITECTURE.md`](./docs/public/ARCHITECTURE.md)
-- [`docs/public/DEPLOYMENT.md`](./docs/public/DEPLOYMENT.md)
-- [`docs/public/SECURITY.md`](./docs/public/SECURITY.md)
-- [`docs/public/RELEASES.md`](./docs/public/RELEASES.md)
-
-## Repo Layout
+## Repository Layout
 
 ```text
 WebAgent/
@@ -166,26 +132,64 @@ Key folders:
 
 - [`widget/`](./widget): embeddable widget package
 - [`server/`](./server): local bridge and desktop companion
-- [`examples/`](./examples): demo host and reference examples
+- [`examples/`](./examples): demo host and sample integrations
 - [`docs/public/`](./docs/public): public-facing docs
 
-## Project Status
+## Packaging And Downloads
+
+Current packaged artifacts in this repo:
+
+- Windows installer and app in [`server/dist/windows/`](./server/dist/windows)
+- Python wheel and source tarball in [`server/dist/`](./server/dist)
+- widget npm tarball in [`widget/`](./widget)
+
+Checksums:
+
+- [`server/dist/SHA256SUMS.txt`](./server/dist/SHA256SUMS.txt)
+- [`widget/SHA256SUMS.txt`](./widget/SHA256SUMS.txt)
+
+Important:
+
+- current Windows binaries are unsigned
+- signed release builds are still pending
+- macOS and Linux packaging is usable but less polished than the Windows flow
+
+## Documentation
+
+- [`docs/public/QUICKSTART.md`](./docs/public/QUICKSTART.md)
+- [`docs/public/USAGE.md`](./docs/public/USAGE.md)
+- [`docs/public/DOWNLOADS.md`](./docs/public/DOWNLOADS.md)
+- [`docs/public/BRIDGE_CONTRACT.md`](./docs/public/BRIDGE_CONTRACT.md)
+- [`docs/public/ARCHITECTURE.md`](./docs/public/ARCHITECTURE.md)
+- [`docs/public/DEPLOYMENT.md`](./docs/public/DEPLOYMENT.md)
+- [`docs/public/SECURITY.md`](./docs/public/SECURITY.md)
+- [`docs/public/RELEASES.md`](./docs/public/RELEASES.md)
+
+## Current Status
 
 Already in place:
 
-- reusable embeddable widget
+- embeddable widget package
 - Codex and Claude support
-- widget-side progress and action flow
 - local bridge auto-discovery
-- local website approval flow
-- Windows setup flow and desktop companion
+- user approval flow for site access
+- packaged Windows setup flow
+- optional desktop companion
 
-Still needs more hardening:
+Still being improved:
 
-- more automated test coverage
+- broader automated test coverage
 - stronger hosted-backend auth controls
-- broader browser and host-site integration testing
+- broader integration testing across host sites and browsers
 - more polished macOS and Linux packaging
+
+## Recommended Demo Additions
+
+The repository would benefit from:
+
+- screenshots of the widget embedded on a host page
+- a short GIF showing the approval flow
+- a sequence diagram showing host page -> widget -> local bridge -> backend
 
 ## Contributing
 

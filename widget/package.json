@@ -1,7 +1,7 @@
 {
   "name": "@webagent/widget",
   "version": "0.1.0",
-  "description": "Embeddable Codex/Claude website assistant widget",
+  "description": "Embeddable website agent widget for Codex and Claude workflows",
   "type": "commonjs",
   "main": "dist/agent-widget.js",
   "files": [
@@ -14,8 +14,10 @@
     "widget",
     "codex",
     "claude",
-    "assistant",
-    "browser"
+    "browser",
+    "automation",
+    "local-first",
+    "agent-ui"
   ],
   "license": "MIT"
 }
